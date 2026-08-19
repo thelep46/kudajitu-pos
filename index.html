@@ -94,7 +94,9 @@
                 </div>
 
                 <div style="display: flex; flex-direction: column; gap: 12px;">
-                    <button class="btn btn-primary btn-block"><i class="fas fa-print"></i> Proses & Simpan</button>
+                    <button class="btn btn-primary btn-block" onclick="buatDanBukaStruk()">
+                    <i class="fas fa-print"></i> Proses & Buat Struk
+                    </button>
                     <button class="btn btn-danger btn-block">Batalkan</button>
                 </div>
             </div>
@@ -160,6 +162,34 @@
         </div>
 
     </div>
+    <script>
+    // Fungsi untuk membuat link struk dan membukanya
+    function buatDanBukaStruk() {
+        // 1. Ambil data dari input form (Contoh sederhana)
+        // Nanti bisa Anda sesuaikan dengan ID input yang sebenarnya
+        let nomorPesanan = "INV-0899"; // Biasanya ini di-generate otomatis
+        let namaMeja = document.querySelector('input[placeholder="Ketik nama atau nomor meja..."]').value;
+        let statusBayar = document.querySelector('select').value;
+        let totalHarga = "20,000"; // Dari perhitungan total Anda
+
+        // Validasi simpel jika nama meja kosong
+        if(namaMeja === "") {
+            namaMeja = "Pelanggan Umum";
+        }
+
+        // 2. Rangkai data menjadi URL Parameter
+        // Menggunakan encodeURIComponent agar spasi dan simbol aman di dalam URL
+        let urlStruk = `struk.html?id=${nomorPesanan}&meja=${encodeURIComponent(namaMeja)}&status=${encodeURIComponent(statusBayar)}&total=${totalHarga}`;
+
+        // 3. Buka halaman struk di tab baru
+        window.open(urlStruk, '_blank');
+
+        // (OPSIONAL) Fitur salin link agar bisa dikirim via WhatsApp
+        let linkLengkap = window.location.origin + '/' + urlStruk;
+        console.log("Link Struk untuk dikirim ke pelanggan: ", linkLengkap);
+    }
+</script>
+    
 
 </body>
 </html>

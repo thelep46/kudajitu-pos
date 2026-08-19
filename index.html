@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <title>POS KUDAJITU COFFEE</title>
+  <style>
+    body { background-color: #f4f6f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    .navbar-brand { font-weight: 900; letter-spacing: 1px; color: #27CCC2 !important; }
+    .nav-pills .nav-link.active { background-color: #27CCC2; }
+    .nav-pills .nav-link { color: #333; cursor: pointer; font-weight: 500;}
+    .card-menu { cursor: pointer; transition: 0.2s; border: none; border-left: 4px solid #27CCC2; box-shadow: 0 2px 5px rgba(0,0,0,0.05);}
+    .card-menu:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+    .invoice-box { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 0 15px rgba(0,0,0,0.1); position: sticky; top: 20px;}
+    .person-header { background-color: #ffebee; color: #d32f2f; font-weight: bold; padding: 5px 10px; border-radius: 4px; margin-top: 15px; font-size: 14px;}
+    .table-history th { background-color: #212529; color: white;}
+  </style>
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+    <div class="container">
+      <a class="navbar-brand" href="#">KUDAJITU AMAZON</a>
+      <ul class="nav nav-pills ms-auto" id="pills-tab" role="tablist">
+        <li class="nav-item">
+          <a class="nav-link active" onclick="switchTab('kasir')">🛒 Kasir</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link text-white" onclick="switchTab('history'); loadHistory();">📊 Laporan</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link text-white" onclick="switchTab('kelola-menu');">⚙️ Menu</a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="container">
+    
+    <!-- TAB KASIR -->
+    <div id="tab-kasir">
+      <div class="row">
+        <div class="col-md-7 mb-4">
+          <div class="bg-white p-4 rounded shadow-sm mb-4">
+            <h5 class="fw-bold mb-3">1. Data Pelanggan & Pembayaran</h5>
+            <div class="mb-3">
+              <label class="form-label text-muted small">Nama Pemesan / Meja</label>
+              <input type="text" id="nama-pelanggan" class="form-control form-control-lg" placeholder="Masukkan Nama Pemesan / Meja...">
+            </div>
+            <div>
+              <label class="form-label text-muted small">Status Pembayaran Awal</label>
+              <select id="status-pembayaran" class="form-select">
+                <option value="Sudah Bayar">Sudah Bayar (Lunas)</option>
+                <option value="Belum Bayar">Belum Bayar (Belum Lunas / Kasbon)</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="bg-white p-4 rounded shadow-sm">
+            <h5 class="fw-bold mb-3">2. Pilih Pesanan</h5>
+            <div id="menu-grid" class="row g-2">
+              <p class="text-muted">Memuat menu server...</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-5">
+          <div class="invoice-box">
+            <h4 class="text-center fw-bold">RINGKASAN ORDER</h4>
+            <hr>
+            <div id="cart-items" style="min-height: 200px;">
+              <p class="text-center text-muted mt-5">Belum ada item ditambahkan</p>
+            </div>
+            <hr>
+            <h3 class="text-end fw-bold text-danger">KHR៛<span id="grand-total">0</span></h3>
+            
+            <div class="d-grid gap-2 mt-4">
+              <button class="btn btn-primary btn-lg" onclick="bayar()">Proses Order & Buat Struk</button>
+              <button class="btn btn-light text-danger" onclick="resetCart()">Batalkan Transaksi</button>
+            </div>
+
+            <div id="link-area" class="alert alert-success mt-4 d-none text-center">
+              <p class="mb-2 fw-bold">Transaksi Berhasil! Bagikan link struk:</p>
+              <input type="text" id="invoice-link" class="form-control form-control-sm mb-2 text-center" readonly>
+              <button class="btn btn-sm btn-outline-dark mb-1" onclick="copyLink()">📋 Copy Link</button>
+              <a id="wa-link" href="#" target="_blank" class="btn btn-sm btn-success mb-1">💬 WhatsApp</a>
+              <a id="open-link" href="#" target="_blank" class="btn btn-sm btn-primary mb-1">🔗 Buka Struk</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB LAPORAN -->
+    <div id="tab-history" class="d-none bg-white p-4 rounded shadow-sm">
+      <h3 class="fw-bold mb-4">📊 Laporan Transaksi Terakhir</h3>
+      <div class="table-responsive">
+        <table class="table table-hover table-history align-middle">
+          <thead>
+            <tr>
+              <th>Waktu</th>
+              <th>No. Invoice</th>
+              <th>Nama Pelanggan</th>
+              <th>Rincian Pesanan</th>
+              <th>Nominal</th>
+              <th>Status</th>
+              <th class="text-center">Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="history-table-body">
+            <tr><td colspan="7" class="text-center">Memuat data dari server...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB KELOLA MENU -->
+    <div id="tab-kelola-menu" class="d-none bg-white p-4 rounded shadow-sm">
+      <h3 class="fw-bold mb-4">⚙️ Kelola Daftar Menu</h3>
+      
+      <div class="row mb-4">
+        <div class="col-md-5 mb-2">
+          <input type="text" id="input-nama-menu" class="form-control" placeholder="Nama Menu (Cth: V60 Arabica)">
+        </div>
+        <div class="col-md-4 mb-2">
+          <input type="number" id="input-harga-menu" class="form-control" placeholder="Harga Angka (Cth: 25000)">
+        </div>
+        <div class="col-md-3 d-grid mb-2">
+          <button class="btn btn-success" onclick="tambahMenu()">+ Tambah Menu</button>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-bordered">
+          <thead class="table-light">
+            <tr>
+              <th>Nama Item</th>
+              <th>Harga</th>
+              <th class="text-center" style="width: 100px;">Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="table-kelola-menu-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    var globalMenuData = [];
+    var cart = [];
+
+    google.script.run
+      .withSuccessHandler(renderMenuSystem)
+      .withFailureHandler(function(err) {
+        document.getElementById('menu-grid').innerHTML = '<div class="alert alert-danger">Error: ' + err.message + '</div>';
+      })
+      .getMenuData();
+
+    function switchTab(tabName) {
+      document.getElementById('tab-kasir').classList.add('d-none');
+      document.getElementById('tab-history').classList.add('d-none');
+      document.getElementById('tab-kelola-menu').classList.add('d-none');
+      document.getElementById('tab-' + tabName).classList.remove('d-none');
+      
+      var links = document.querySelectorAll('.nav-pills .nav-link');
+      for (var i = 0; i < links.length; i++) {
+        links[i].classList.remove('active');
+        links[i].classList.add('text-white');
+      }
+      event.target.classList.add('active');
+      event.target.classList.remove('text-white');
+    }
+
+    function renderMenuSystem(data) {
+      globalMenuData = data;
+      var gridHtml = '';
+      for (var i = 0; i < data.length; i++) {
+        var item = data[i];
+        gridHtml += '<div class="col-md-6">' +
+                    '<div class="card p-3 card-menu" onclick="tambahKeKeranjang(\'' + item[0] + '\', ' + item[1] + ')">' +
+                    '<div class="d-flex justify-content-between align-items-center">' +
+                    '<span class="fw-bold">' + item[0] + '</span>' +
+                    '<span class="badge bg-dark rounded-pill">KHR៛' + item[1] + '</span>' +
+                    '</div></div></div>';
+      }
+      document.getElementById('menu-grid').innerHTML = gridHtml;
+
+      var tableHtml = '';
+      for (var j = 0; j < data.length; j++) {
+        var menuItem = data[j];
+        tableHtml += '<tr>' +
+                     '<td>' + menuItem[0] + '</td>' +
+                     '<td>KHR៛' + menuItem[1] + '</td>' +
+                     '<td class="text-center">' +
+                     '<button class="btn btn-sm btn-danger" onclick="hapusMenu(\'' + menuItem[0] + '\')">Hapus</button>' +
+                     '</td></tr>';
+      }
+      document.getElementById('table-kelola-menu-body').innerHTML = tableHtml;
+    }
+
+    function tambahMenu() {
+      var nama = document.getElementById('input-nama-menu').value.trim();
+      var harga = document.getElementById('input-harga-menu').value.trim();
+
+      if(nama === "" || harga === "") { alert("Nama dan Harga harus diisi!"); return; }
+      
+      var btn = event.target;
+      btn.innerText = "Menyimpan..."; btn.disabled = true;
+
+      google.script.run.withSuccessHandler(function(newData){
+        renderMenuSystem(newData);
+        document.getElementById('input-nama-menu').value = "";
+        document.getElementById('input-harga-menu').value = "";
+        btn.innerText = "+ Tambah Menu"; btn.disabled = false;
+        alert("Menu berhasil ditambahkan!");
+      }).tambahMenuBaru(nama, harga);
+    }
+
+    function hapusMenu(namaMenu) {
+      if(!confirm('Yakin ingin menghapus menu "' + namaMenu + '"?')) return;
+      google.script.run.withSuccessHandler(function(newData){
+        renderMenuSystem(newData);
+      }).hapusMenuBerdasarkanNama(namaMenu);
+    }
+
+    function loadHistory() {
+      document.getElementById('history-table-body').innerHTML = '<tr><td colspan="7" class="text-center">Mengambil data...</td></tr>';
+      google.script.run.withSuccessHandler(renderHistoryTable).getHistoryData();
+    }
+
+    function renderHistoryTable(data) {
+      var html = '';
+      if(data.length === 0) {
+        html = '<tr><td colspan="7" class="text-center">Belum ada transaksi.</td></tr>';
+      } else {
+        for (var i = 0; i < data.length; i++) {
+          var tx = data[i];
+          var badgeClass = tx.status === 'Sudah Bayar' ? 'bg-success' : 'bg-warning text-dark';
+          var actionBtn = tx.status === 'Sudah Bayar'
+            ? '<button class="btn btn-sm btn-outline-warning" onclick="ubahStatus(\'' + tx.invoiceId + '\', \'Belum Bayar\')">Set Belum Bayar</button>'
+            : '<button class="btn btn-sm btn-outline-success" onclick="ubahStatus(\'' + tx.invoiceId + '\', \'Sudah Bayar\')">Set Sudah Bayar</button>';
+
+          html += '<tr>' +
+                  '<td><small class="text-muted">' + tx.waktu + '</small></td>' +
+                  '<td><span class="badge bg-secondary">' + tx.invoiceId + '</span></td>' +
+                  '<td class="fw-bold">' + tx.nama + '</td>' +
+                  '<td><small>' + tx.pesanan + '</small></td>' +
+                  '<td class="text-success fw-bold">KHR៛' + tx.total + '</td>' +
+                  '<td><span class="badge ' + badgeClass + '">' + tx.status + '</span></td>' +
+                  '<td class="text-center">' + actionBtn + '</td>' +
+                  '</tr>';
+        }
+      }
+      document.getElementById('history-table-body').innerHTML = html;
+    }
+
+    function ubahStatus(invoiceId, statusBaru) {
+      google.script.run.withSuccessHandler(renderHistoryTable).updateStatusTransaksi(invoiceId, statusBaru);
+    }
+
+    function tambahKeKeranjang(menu, harga) {
+      var inputNama = document.getElementById('nama-pelanggan').value.trim();
+      var namaPelanggan = inputNama === "" ? "Tamu Reguler" : inputNama;
+      
+      var existingItem = null;
+      for (var i = 0; i < cart.length; i++) {
+        if (cart[i].namaPelanggan === namaPelanggan && cart[i].menu === menu) {
+          existingItem = cart[i];
+          break;
+        }
+      }
+      
+      if (existingItem) {
+        existingItem.qty += 1;
+        existingItem.subtotal = existingItem.qty * existingItem.harga;
+      } else {
+        cart.push({ namaPelanggan: namaPelanggan, menu: menu, harga: harga, qty: 1, subtotal: harga });
+      }
+      updateInvoiceUI();
+    }
+
+    function updateInvoiceUI() {
+      var invoiceHtml = '';
+      var grandTotal = 0;
+      
+      var groupedCart = {};
+      for (var i = 0; i < cart.length; i++) {
+        var item = cart[i];
+        if (!groupedCart[item.namaPelanggan]) {
+          groupedCart[item.namaPelanggan] = [];
+        }
+        groupedCart[item.namaPelanggan].push(item);
+      }
+
+      for (var person in groupedCart) {
+        if (groupedCart.hasOwnProperty(person)) {
+          var personTotal = 0;
+          invoiceHtml += '<div class="person-header">' + person + '</div><table class="table table-sm mb-0"><tbody>';
+          var items = groupedCart[person];
+          for (var k = 0; k < items.length; k++) {
+            invoiceHtml += '<tr><td>' + items[k].menu + ' (x' + items[k].qty + ')</td><td class="text-end">KHR៛' + items[k].subtotal + '</td></tr>';
+            personTotal += items[k].subtotal;
+          }
+          invoiceHtml += '<tr><th class="text-end">Subtotal:</th><th class="text-end text-danger">KHR៛' + personTotal + '</th></tr></tbody></table>';
+          grandTotal += personTotal;
+        }
+      }
+
+      if(cart.length === 0) invoiceHtml = '<p class="text-center text-muted mt-5">Belum ada item ditambahkan</p>';
+      document.getElementById('cart-items').innerHTML = invoiceHtml;
+      document.getElementById('grand-total').innerText = grandTotal;
+      document.getElementById('link-area').classList.add('d-none');
+    }
+
+    function resetCart() {
+      cart = [];
+      document.getElementById('nama-pelanggan').value = '';
+      updateInvoiceUI();
+    }
+
+    function bayar() {
+      if (cart.length === 0) { alert("Keranjang masih kosong!"); return; }
+      
+      var statusBayar = document.getElementById('status-pembayaran').value;
+
+      var groupedCart = {};
+      for (var i = 0; i < cart.length; i++) {
+        var item = cart[i];
+        if (!groupedCart[item.namaPelanggan]) {
+          groupedCart[item.namaPelanggan] = { pesanan: [], total: 0 };
+        }
+        groupedCart[item.namaPelanggan].pesanan.push(item.menu + ' (x' + item.qty + ')');
+        groupedCart[item.namaPelanggan].total += item.subtotal;
+      }
+
+      var dataTransaksi = [];
+      for (var person in groupedCart) {
+        if (groupedCart.hasOwnProperty(person)) {
+          dataTransaksi.push({ nama: person, pesanan: groupedCart[person].pesanan.join(', '), total: groupedCart[person].total });
+        }
+      }
+
+      var btn = event.target;
+      var originalText = btn.innerText;
+      btn.innerText = "Memproses..."; btn.disabled = true;
+
+      google.script.run.withSuccessHandler(function(res) {
+        document.getElementById('link-area').classList.remove('d-none');
+        document.getElementById('invoice-link').value = res.link;
+        
+        var pesanWa = encodeURIComponent('Halo, ini tagihan pesanan Anda di KUDAJITU COFFEE.\n\nCek rincian pesanan dan total tagihan pada link berikut:\n' + res.link + '\n\nTerima kasih!');
+        document.getElementById('wa-link').href = 'https://wa.me/?text=' + pesanWa;
+        document.getElementById('open-link').href = res.link;
+
+        cart = []; 
+        btn.innerText = originalText; btn.disabled = false;
+      }).simpanTransaksi(dataTransaksi, statusBayar);
+    }
+
+    function copyLink() {
+      var linkInput = document.getElementById('invoice-link');
+      linkInput.select(); document.execCommand("copy");
+      alert("Link disalin!");
+    }
+  </script>
+</body>
+</html>

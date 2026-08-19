@@ -1,5 +1,5 @@
 const SPREADSHEET_ID = "1ZRmlqBINoh9kNgSq9o47Ogi7TDZPV2ykNFdlLU5BmYg";
-const FRONTEND_URL = "https://kudajitu-pos.pages.dev/";
+const FRONTEND_URL = "https://kudajitu-pos.pages.dev/struk.html";
 
 function getSheet(namaSheet) {
   if (SPREADSHEET_ID) return SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(namaSheet);

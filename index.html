@@ -1,370 +1,172 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
-  <base target="_top">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <title>POS KUDAJITU COFFEE</title>
-  <style>
-    body { background-color: #f4f6f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-    .navbar-brand { font-weight: 900; letter-spacing: 1px; color: #27CCC2 !important; }
-    .nav-pills .nav-link.active { background-color: #27CCC2; }
-    .nav-pills .nav-link { color: #333; cursor: pointer; font-weight: 500;}
-    .card-menu { cursor: pointer; transition: 0.2s; border: none; border-left: 4px solid #27CCC2; box-shadow: 0 2px 5px rgba(0,0,0,0.05);}
-    .card-menu:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-    .invoice-box { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 0 15px rgba(0,0,0,0.1); position: sticky; top: 20px;}
-    .person-header { background-color: #ffebee; color: #d32f2f; font-weight: bold; padding: 5px 10px; border-radius: 4px; margin-top: 15px; font-size: 14px;}
-    .table-history th { background-color: #212529; color: white;}
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kudajitu Amazon - Smart POS</title>
+    <!-- Menggunakan Tailwind CSS untuk styling modern -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
-<body>
+<body class="bg-gray-50 font-sans text-gray-800">
 
-  <!-- NAVBAR -->
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
-    <div class="container">
-      <a class="navbar-brand" href="#">KUDAJITU AMAZON</a>
-      <ul class="nav nav-pills ms-auto" id="pills-tab" role="tablist">
-        <li class="nav-item">
-          <a class="nav-link active" onclick="switchTab('kasir')">🛒 Kasir</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link text-white" onclick="switchTab('history'); loadHistory();">📊 Laporan</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link text-white" onclick="switchTab('kelola-menu');">⚙️ Menu</a>
-        </li>
-      </ul>
+    <!-- DEV MODE TOGGLE (Hanya untuk testing tampilan) -->
+    <div class="bg-indigo-600 p-2 text-center text-sm">
+        <span class="text-white font-semibold mr-4">Pilih Tampilan:</span>
+        <button onclick="switchView('admin')" class="bg-white text-indigo-600 px-3 py-1 rounded shadow hover:bg-gray-100">💻 Mode Admin</button>
+        <button onclick="switchView('user')" class="bg-white text-indigo-600 px-3 py-1 rounded shadow hover:bg-gray-100 ml-2">📱 Mode User (Struk)</button>
     </div>
-  </nav>
 
-  <div class="container">
-    
-    <!-- TAB KASIR -->
-    <div id="tab-kasir">
-      <div class="row">
-        <div class="col-md-7 mb-4">
-          <div class="bg-white p-4 rounded shadow-sm mb-4">
-            <h5 class="fw-bold mb-3">1. Data Pelanggan & Pembayaran</h5>
-            <div class="mb-3">
-              <label class="form-label text-muted small">Nama Pemesan / Meja</label>
-              <input type="text" id="nama-pelanggan" class="form-control form-control-lg" placeholder="Masukkan Nama Pemesan / Meja...">
+    <!-- ========================================== -->
+    <!-- 1. TAMPILAN ADMIN (KASIR / PENGELOLA) -->
+    <!-- ========================================== -->
+    <div id="admin-view" class="block">
+        <!-- Navbar Admin -->
+        <nav class="bg-slate-900 text-white p-4 shadow-md flex justify-between items-center">
+            <div class="text-xl font-bold tracking-wider text-teal-400">KUDAJITU AMAZON <span class="text-sm font-normal text-gray-400">| Admin Panel</span></div>
+            <div class="flex gap-4">
+                <button class="hover:text-teal-400"><i class="fas fa-chart-bar"></i> Laporan</button>
+                <button class="hover:text-teal-400"><i class="fas fa-cog"></i> Pengaturan</button>
             </div>
-            <div>
-              <label class="form-label text-muted small">Status Pembayaran Awal</label>
-              <select id="status-pembayaran" class="form-select">
-                <option value="Sudah Bayar">Sudah Bayar (Lunas)</option>
-                <option value="Belum Bayar">Belum Bayar (Belum Lunas / Kasbon)</option>
-              </select>
-            </div>
-          </div>
-          
-          <div class="bg-white p-4 rounded shadow-sm">
-            <h5 class="fw-bold mb-3">2. Pilih Pesanan</h5>
-            <div id="menu-grid" class="row g-2">
-              <p class="text-muted">Memuat menu server...</p>
-            </div>
-          </div>
-        </div>
+        </nav>
 
-        <div class="col-md-5">
-          <div class="invoice-box">
-            <h4 class="text-center fw-bold">RINGKASAN ORDER</h4>
-            <hr>
-            <div id="cart-items" style="min-height: 200px;">
-              <p class="text-center text-muted mt-5">Belum ada item ditambahkan</p>
-            </div>
-            <hr>
-            <h3 class="text-end fw-bold text-danger">KHR៛<span id="grand-total">0</span></h3>
+        <div class="max-w-7xl mx-auto mt-8 p-4 grid grid-cols-1 md:grid-cols-3 gap-6">
             
-            <div class="d-grid gap-2 mt-4">
-              <button class="btn btn-primary btn-lg" onclick="bayar()">Proses Order & Buat Struk</button>
-              <button class="btn btn-light text-danger" onclick="resetCart()">Batalkan Transaksi</button>
+            <!-- Kolom Input Pesanan Baru -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 md:col-span-2">
+                <h2 class="text-lg font-bold mb-4 border-b pb-2"><i class="fas fa-plus-circle text-teal-500"></i> Buat Pesanan Baru</h2>
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm text-gray-500 mb-1">Nama / Meja</label>
+                        <input type="text" placeholder="Contoh: Meja 4 / Budi" class="w-full border rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-teal-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-500 mb-1">Status Awal</label>
+                        <select class="w-full border rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-teal-500">
+                            <option>Belum Bayar</option>
+                            <option>Sudah Lunas</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Mockup Daftar Menu -->
+                <h3 class="text-sm font-bold text-gray-500 mt-6 mb-2">Pilih Item Menu:</h3>
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    <div class="border rounded-lg p-3 cursor-pointer hover:border-teal-500 hover:bg-teal-50">
+                        <div class="font-semibold">Kopi Hitam</div>
+                        <div class="text-teal-600 text-sm">KHR 5,000</div>
+                    </div>
+                    <div class="border rounded-lg p-3 cursor-pointer hover:border-teal-500 hover:bg-teal-50">
+                        <div class="font-semibold">Nasi Goreng</div>
+                        <div class="text-teal-600 text-sm">KHR 12,000</div>
+                    </div>
+                </div>
             </div>
 
-            <div id="link-area" class="alert alert-success mt-4 d-none text-center">
-              <p class="mb-2 fw-bold">Transaksi Berhasil! Bagikan link struk:</p>
-              <input type="text" id="invoice-link" class="form-control form-control-sm mb-2 text-center" readonly>
-              <button class="btn btn-sm btn-outline-dark mb-1" onclick="copyLink()">📋 Copy Link</button>
-              <a id="wa-link" href="#" target="_blank" class="btn btn-sm btn-success mb-1">💬 WhatsApp</a>
-              <a id="open-link" href="#" target="_blank" class="btn btn-sm btn-primary mb-1">🔗 Buka Struk</a>
+            <!-- Kolom Manajemen Tagihan Aktif -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                <h2 class="text-lg font-bold mb-4 border-b pb-2"><i class="fas fa-list-check text-blue-500"></i> Tagihan Aktif</h2>
+                
+                <!-- Card Tagihan 1 -->
+                <div class="border rounded-lg p-4 mb-3 border-l-4 border-l-yellow-400">
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <div class="font-bold">Meja 4 (Budi)</div>
+                            <div class="text-xs text-gray-400">ID: #INV-001</div>
+                        </div>
+                        <span class="bg-yellow-100 text-yellow-700 text-xs px-2 py-1 rounded font-bold">Belum Bayar</span>
+                    </div>
+                    <div class="text-xl font-bold text-gray-800 mb-3">KHR 17,000</div>
+                    <div class="flex gap-2">
+                        <button class="flex-1 bg-blue-600 text-white text-sm py-2 rounded hover:bg-blue-700"><i class="fas fa-share-nodes"></i> Link Struk</button>
+                        <button class="flex-1 bg-green-500 text-white text-sm py-2 rounded hover:bg-green-600"><i class="fas fa-check"></i> Lunas</button>
+                    </div>
+                </div>
+
             </div>
-          </div>
         </div>
-      </div>
     </div>
 
-    <!-- TAB LAPORAN -->
-    <div id="tab-history" class="d-none bg-white p-4 rounded shadow-sm">
-      <h3 class="fw-bold mb-4">📊 Laporan Transaksi Terakhir</h3>
-      <div class="table-responsive">
-        <table class="table table-hover table-history align-middle">
-          <thead>
-            <tr>
-              <th>Waktu</th>
-              <th>No. Invoice</th>
-              <th>Nama Pelanggan</th>
-              <th>Rincian Pesanan</th>
-              <th>Nominal</th>
-              <th>Status</th>
-              <th class="text-center">Aksi</th>
-            </tr>
-          </thead>
-          <tbody id="history-table-body">
-            <tr><td colspan="7" class="text-center">Memuat data dari server...</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- TAB KELOLA MENU -->
-    <div id="tab-kelola-menu" class="d-none bg-white p-4 rounded shadow-sm">
-      <h3 class="fw-bold mb-4">⚙️ Kelola Daftar Menu</h3>
-      
-      <div class="row mb-4">
-        <div class="col-md-5 mb-2">
-          <input type="text" id="input-nama-menu" class="form-control" placeholder="Nama Menu (Cth: V60 Arabica)">
-        </div>
-        <div class="col-md-4 mb-2">
-          <input type="number" id="input-harga-menu" class="form-control" placeholder="Harga Angka (Cth: 25000)">
-        </div>
-        <div class="col-md-3 d-grid mb-2">
-          <button class="btn btn-success" onclick="tambahMenu()">+ Tambah Menu</button>
-        </div>
-      </div>
-
-      <div class="table-responsive">
-        <table class="table table-bordered">
-          <thead class="table-light">
-            <tr>
-              <th>Nama Item</th>
-              <th>Harga</th>
-              <th class="text-center" style="width: 100px;">Aksi</th>
-            </tr>
-          </thead>
-          <tbody id="table-kelola-menu-body"></tbody>
-        </table>
-      </div>
-    </div>
-
-  </div>
-
-  <script>
-    var globalMenuData = [];
-    var cart = [];
-
-    google.script.run
-      .withSuccessHandler(renderMenuSystem)
-      .withFailureHandler(function(err) {
-        document.getElementById('menu-grid').innerHTML = '<div class="alert alert-danger">Error: ' + err.message + '</div>';
-      })
-      .getMenuData();
-
-    function switchTab(tabName) {
-      document.getElementById('tab-kasir').classList.add('d-none');
-      document.getElementById('tab-history').classList.add('d-none');
-      document.getElementById('tab-kelola-menu').classList.add('d-none');
-      document.getElementById('tab-' + tabName).classList.remove('d-none');
-      
-      var links = document.querySelectorAll('.nav-pills .nav-link');
-      for (var i = 0; i < links.length; i++) {
-        links[i].classList.remove('active');
-        links[i].classList.add('text-white');
-      }
-      event.target.classList.add('active');
-      event.target.classList.remove('text-white');
-    }
-
-    function renderMenuSystem(data) {
-      globalMenuData = data;
-      var gridHtml = '';
-      for (var i = 0; i < data.length; i++) {
-        var item = data[i];
-        gridHtml += '<div class="col-md-6">' +
-                    '<div class="card p-3 card-menu" onclick="tambahKeKeranjang(\'' + item[0] + '\', ' + item[1] + ')">' +
-                    '<div class="d-flex justify-content-between align-items-center">' +
-                    '<span class="fw-bold">' + item[0] + '</span>' +
-                    '<span class="badge bg-dark rounded-pill">KHR៛' + item[1] + '</span>' +
-                    '</div></div></div>';
-      }
-      document.getElementById('menu-grid').innerHTML = gridHtml;
-
-      var tableHtml = '';
-      for (var j = 0; j < data.length; j++) {
-        var menuItem = data[j];
-        tableHtml += '<tr>' +
-                     '<td>' + menuItem[0] + '</td>' +
-                     '<td>KHR៛' + menuItem[1] + '</td>' +
-                     '<td class="text-center">' +
-                     '<button class="btn btn-sm btn-danger" onclick="hapusMenu(\'' + menuItem[0] + '\')">Hapus</button>' +
-                     '</td></tr>';
-      }
-      document.getElementById('table-kelola-menu-body').innerHTML = tableHtml;
-    }
-
-    function tambahMenu() {
-      var nama = document.getElementById('input-nama-menu').value.trim();
-      var harga = document.getElementById('input-harga-menu').value.trim();
-
-      if(nama === "" || harga === "") { alert("Nama dan Harga harus diisi!"); return; }
-      
-      var btn = event.target;
-      btn.innerText = "Menyimpan..."; btn.disabled = true;
-
-      google.script.run.withSuccessHandler(function(newData){
-        renderMenuSystem(newData);
-        document.getElementById('input-nama-menu').value = "";
-        document.getElementById('input-harga-menu').value = "";
-        btn.innerText = "+ Tambah Menu"; btn.disabled = false;
-        alert("Menu berhasil ditambahkan!");
-      }).tambahMenuBaru(nama, harga);
-    }
-
-    function hapusMenu(namaMenu) {
-      if(!confirm('Yakin ingin menghapus menu "' + namaMenu + '"?')) return;
-      google.script.run.withSuccessHandler(function(newData){
-        renderMenuSystem(newData);
-      }).hapusMenuBerdasarkanNama(namaMenu);
-    }
-
-    function loadHistory() {
-      document.getElementById('history-table-body').innerHTML = '<tr><td colspan="7" class="text-center">Mengambil data...</td></tr>';
-      google.script.run.withSuccessHandler(renderHistoryTable).getHistoryData();
-    }
-
-    function renderHistoryTable(data) {
-      var html = '';
-      if(data.length === 0) {
-        html = '<tr><td colspan="7" class="text-center">Belum ada transaksi.</td></tr>';
-      } else {
-        for (var i = 0; i < data.length; i++) {
-          var tx = data[i];
-          var badgeClass = tx.status === 'Sudah Bayar' ? 'bg-success' : 'bg-warning text-dark';
-          var actionBtn = tx.status === 'Sudah Bayar'
-            ? '<button class="btn btn-sm btn-outline-warning" onclick="ubahStatus(\'' + tx.invoiceId + '\', \'Belum Bayar\')">Set Belum Bayar</button>'
-            : '<button class="btn btn-sm btn-outline-success" onclick="ubahStatus(\'' + tx.invoiceId + '\', \'Sudah Bayar\')">Set Sudah Bayar</button>';
-
-          html += '<tr>' +
-                  '<td><small class="text-muted">' + tx.waktu + '</small></td>' +
-                  '<td><span class="badge bg-secondary">' + tx.invoiceId + '</span></td>' +
-                  '<td class="fw-bold">' + tx.nama + '</td>' +
-                  '<td><small>' + tx.pesanan + '</small></td>' +
-                  '<td class="text-success fw-bold">KHR៛' + tx.total + '</td>' +
-                  '<td><span class="badge ' + badgeClass + '">' + tx.status + '</span></td>' +
-                  '<td class="text-center">' + actionBtn + '</td>' +
-                  '</tr>';
-        }
-      }
-      document.getElementById('history-table-body').innerHTML = html;
-    }
-
-    function ubahStatus(invoiceId, statusBaru) {
-      google.script.run.withSuccessHandler(renderHistoryTable).updateStatusTransaksi(invoiceId, statusBaru);
-    }
-
-    function tambahKeKeranjang(menu, harga) {
-      var inputNama = document.getElementById('nama-pelanggan').value.trim();
-      var namaPelanggan = inputNama === "" ? "Tamu Reguler" : inputNama;
-      
-      var existingItem = null;
-      for (var i = 0; i < cart.length; i++) {
-        if (cart[i].namaPelanggan === namaPelanggan && cart[i].menu === menu) {
-          existingItem = cart[i];
-          break;
-        }
-      }
-      
-      if (existingItem) {
-        existingItem.qty += 1;
-        existingItem.subtotal = existingItem.qty * existingItem.harga;
-      } else {
-        cart.push({ namaPelanggan: namaPelanggan, menu: menu, harga: harga, qty: 1, subtotal: harga });
-      }
-      updateInvoiceUI();
-    }
-
-    function updateInvoiceUI() {
-      var invoiceHtml = '';
-      var grandTotal = 0;
-      
-      var groupedCart = {};
-      for (var i = 0; i < cart.length; i++) {
-        var item = cart[i];
-        if (!groupedCart[item.namaPelanggan]) {
-          groupedCart[item.namaPelanggan] = [];
-        }
-        groupedCart[item.namaPelanggan].push(item);
-      }
-
-      for (var person in groupedCart) {
-        if (groupedCart.hasOwnProperty(person)) {
-          var personTotal = 0;
-          invoiceHtml += '<div class="person-header">' + person + '</div><table class="table table-sm mb-0"><tbody>';
-          var items = groupedCart[person];
-          for (var k = 0; k < items.length; k++) {
-            invoiceHtml += '<tr><td>' + items[k].menu + ' (x' + items[k].qty + ')</td><td class="text-end">KHR៛' + items[k].subtotal + '</td></tr>';
-            personTotal += items[k].subtotal;
-          }
-          invoiceHtml += '<tr><th class="text-end">Subtotal:</th><th class="text-end text-danger">KHR៛' + personTotal + '</th></tr></tbody></table>';
-          grandTotal += personTotal;
-        }
-      }
-
-      if(cart.length === 0) invoiceHtml = '<p class="text-center text-muted mt-5">Belum ada item ditambahkan</p>';
-      document.getElementById('cart-items').innerHTML = invoiceHtml;
-      document.getElementById('grand-total').innerText = grandTotal;
-      document.getElementById('link-area').classList.add('d-none');
-    }
-
-    function resetCart() {
-      cart = [];
-      document.getElementById('nama-pelanggan').value = '';
-      updateInvoiceUI();
-    }
-
-    function bayar() {
-      if (cart.length === 0) { alert("Keranjang masih kosong!"); return; }
-      
-      var statusBayar = document.getElementById('status-pembayaran').value;
-
-      var groupedCart = {};
-      for (var i = 0; i < cart.length; i++) {
-        var item = cart[i];
-        if (!groupedCart[item.namaPelanggan]) {
-          groupedCart[item.namaPelanggan] = { pesanan: [], total: 0 };
-        }
-        groupedCart[item.namaPelanggan].pesanan.push(item.menu + ' (x' + item.qty + ')');
-        groupedCart[item.namaPelanggan].total += item.subtotal;
-      }
-
-      var dataTransaksi = [];
-      for (var person in groupedCart) {
-        if (groupedCart.hasOwnProperty(person)) {
-          dataTransaksi.push({ nama: person, pesanan: groupedCart[person].pesanan.join(', '), total: groupedCart[person].total });
-        }
-      }
-
-      var btn = event.target;
-      var originalText = btn.innerText;
-      btn.innerText = "Memproses..."; btn.disabled = true;
-
-      google.script.run.withSuccessHandler(function(res) {
-        document.getElementById('link-area').classList.remove('d-none');
-        document.getElementById('invoice-link').value = res.link;
+    <!-- ========================================== -->
+    <!-- 2. TAMPILAN USER (STRUK / TAGIHAN MOBILE)  -->
+    <!-- ========================================== -->
+    <div id="user-view" class="hidden min-h-screen bg-gray-100 flex items-center justify-center p-4">
         
-        var pesanWa = encodeURIComponent('Halo, ini tagihan pesanan Anda di KUDAJITU COFFEE.\n\nCek rincian pesanan dan total tagihan pada link berikut:\n' + res.link + '\n\nTerima kasih!');
-        document.getElementById('wa-link').href = 'https://wa.me/?text=' + pesanWa;
-        document.getElementById('open-link').href = res.link;
+        <!-- Card Struk (Lebar disesuaikan untuk layar HP) -->
+        <div class="bg-white w-full max-w-sm rounded-2xl shadow-xl overflow-hidden relative">
+            
+            <!-- Aksen warna status -->
+            <div class="h-3 bg-yellow-400 w-full"></div>
 
-        cart = []; 
-        btn.innerText = originalText; btn.disabled = false;
-      }).simpanTransaksi(dataTransaksi, statusBayar);
-    }
+            <div class="p-6 text-center border-b border-dashed border-gray-300">
+                <h1 class="text-2xl font-black text-slate-800 tracking-tight">KUDAJITU AMAZON</h1>
+                <p class="text-sm text-gray-500 mt-1">Struk Digital / E-Receipt</p>
+            </div>
 
-    function copyLink() {
-      var linkInput = document.getElementById('invoice-link');
-      linkInput.select(); document.execCommand("copy");
-      alert("Link disalin!");
-    }
-  </script>
+            <div class="p-6">
+                <div class="flex justify-between text-sm mb-4">
+                    <div>
+                        <p class="text-gray-500">Tanggal</p>
+                        <p class="font-semibold">19 Agustus 2026</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-gray-500">No. Tagihan</p>
+                        <p class="font-semibold">#INV-001</p>
+                    </div>
+                </div>
+
+                <div class="flex justify-between text-sm mb-6">
+                    <div>
+                        <p class="text-gray-500">Pemesan</p>
+                        <p class="font-semibold text-lg">Meja 4 (Budi)</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-gray-500">Status</p>
+                        <span class="inline-block bg-yellow-100 text-yellow-700 font-bold px-2 py-1 rounded text-xs mt-1">BELUM BAYAR</span>
+                    </div>
+                </div>
+
+                <!-- Rincian Pesanan -->
+                <div class="space-y-3 mb-6">
+                    <div class="flex justify-between text-sm">
+                        <span>1x Kopi Hitam</span>
+                        <span>KHR 5,000</span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span>1x Nasi Goreng</span>
+                        <span>KHR 12,000</span>
+                    </div>
+                </div>
+
+                <!-- Total -->
+                <div class="border-t border-dashed border-gray-300 pt-4 flex justify-between items-center">
+                    <span class="text-gray-500 font-bold">TOTAL BAYAR</span>
+                    <span class="text-2xl font-black text-red-600">KHR 17,000</span>
+                </div>
+            </div>
+
+            <!-- Tombol Aksi User -->
+            <div class="bg-gray-50 p-6 text-center">
+                <p class="text-xs text-gray-500 mb-4">Tunjukkan struk ini ke kasir untuk melakukan pembayaran.</p>
+                <button class="w-full bg-slate-900 text-white font-bold py-3 rounded-xl hover:bg-slate-800 shadow-lg">
+                    <i class="fas fa-download mr-2"></i> Simpan Struk
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Script untuk Toggle View (Hanya untuk testing) -->
+    <script>
+        function switchView(view) {
+            if(view === 'admin') {
+                document.getElementById('admin-view').classList.remove('hidden');
+                document.getElementById('user-view').classList.add('hidden');
+            } else {
+                document.getElementById('admin-view').classList.add('hidden');
+                document.getElementById('user-view').classList.remove('hidden');
+            }
+        }
+    </script>
 </body>
 </html>

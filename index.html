@@ -1,195 +1,278 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kudajitu Amazon | Smart POS</title>
-    <!-- Menghubungkan ke file CSS Murni yang baru kita buat -->
-    <link rel="stylesheet" href="style.css">
-    <!-- Icon pendukung (Opsional) -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KUDAJITU AMAZON | Smart POS</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
+  <div class="test-nav">
+    <button class="btn btn-light" onclick="showView('admin-ui')">Tampilan Admin</button>
+    <button class="btn btn-light" onclick="showView('user-ui')">Tampilan Struk</button>
+  </div>
 
-    <!-- NAVIGATOR PENGUJIAN (Hapus kode ini saat sudah online) -->
-    <div style="background:#0f172a; padding:10px; text-align:center;">
-        <button onclick="document.getElementById('admin-ui').style.display='block'; document.getElementById('user-ui').style.display='none';" class="btn" style="background:white; padding:8px 16px;">Tampilan Admin</button>
-        <button onclick="document.getElementById('admin-ui').style.display='none'; document.getElementById('user-ui').style.display='flex';" class="btn" style="background:white; padding:8px 16px; margin-left:10px;">Tampilan Struk (User)</button>
-    </div>
+  <div id="admin-ui">
+    <header class="app-header">
+      <div class="brand">KUDAJITU <span>AMAZON</span></div>
+      <div class="header-right">
+        <span id="api-status" class="status-pill status-loading"><i class="fas fa-circle-notch fa-spin"></i> Menghubungkan...</span>
+        <span class="kasir-label">Kasir: Admin Pusat</span>
+      </div>
+    </header>
 
-    <!-- ============================================== -->
-    <!-- 1. ANTARMUKA ADMIN (KASIR) -->
-    <!-- ============================================== -->
-    <div id="admin-ui" style="display: block;">
-        
-        <header class="app-header">
-            <div class="brand">KUDAJITU <span>AMAZON</span></div>
-            <div style="display:flex; gap: 16px;">
-                <span style="color: var(--text-muted); font-weight: 500;">Kasir: Admin Pusat</span>
-            </div>
-        </header>
+    <nav class="app-nav">
+      <button class="nav-tab active" data-tab="kasir" onclick="switchTab('kasir', this)"><i class="fas fa-cash-register"></i> Kasir</button>
+      <button class="nav-tab" data-tab="history" onclick="switchTab('history', this)"><i class="fas fa-chart-line"></i> Laporan</button>
+      <button class="nav-tab" data-tab="kelola-menu" onclick="switchTab('kelola-menu', this)"><i class="fas fa-utensils"></i> Menu</button>
+    </nav>
 
-        <main class="container">
-            <!-- Kolom Kiri: Input & Menu -->
+    <main class="container">
+      <section id="tab-kasir" class="tab-view active-view">
+        <div class="pos-layout">
+          <div class="panel-stack">
             <div class="panel">
-                <div class="panel-header">
-                    <span>1. Informasi Pemesan</span>
+              <div class="panel-header"><span>1. Informasi Pemesan</span></div>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label class="form-label">Nama Pemesan / Meja</label>
+                  <input type="text" id="nama-pelanggan" class="form-control" placeholder="Ketik nama atau nomor meja...">
                 </div>
-                
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-                    <div class="form-group">
-                        <label class="form-label">Nama Pemesan / Meja</label>
-                        <input type="text" class="form-control" placeholder="Ketik nama atau nomor meja...">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Status Pembayaran</label>
-                        <select class="form-control">
-                            <option>Belum Lunas (Kasbon)</option>
-                            <option>Lunas</option>
-                        </select>
-                    </div>
+                <div class="form-group">
+                  <label class="form-label">Status Pembayaran</label>
+                  <select id="status-pembayaran" class="form-control">
+                    <option value="Sudah Bayar">Sudah Bayar (Lunas)</option>
+                    <option value="Belum Bayar">Belum Bayar (Kasbon)</option>
+                  </select>
                 </div>
-
-                <div class="panel-header" style="margin-top: 32px;">
-                    <span>2. Katalog Menu</span>
-                </div>
-                <!-- Tempat menu dimuat dari Google Sheet -->
-                <div class="menu-grid" id="data-menu">
-                    <!-- Contoh Data Dummy -->
-                    <div class="menu-item">
-                        <div class="menu-item-name">Kopi Hitam Jitu</div>
-                        <div class="menu-item-price">KHR 5,000</div>
-                    </div>
-                    <div class="menu-item">
-                        <div class="menu-item-name">Nasi Goreng Spesial</div>
-                        <div class="menu-item-price">KHR 15,000</div>
-                    </div>
-                    <div class="menu-item">
-                        <div class="menu-item-name">Es Teh Manis</div>
-                        <div class="menu-item-price">KHR 3,000</div>
-                    </div>
-                </div>
+              </div>
             </div>
 
-            <!-- Kolom Kanan: Rincian & Aksi -->
-            <div class="panel" style="align-self: start;">
-                <div class="panel-header">
-                    <span>Ringkasan Order</span>
-                </div>
-                
-                <div style="min-height: 200px; color: var(--text-muted); font-size: 0.9rem;">
-                    <div class="receipt-item">
-                        <span>1x Kopi Hitam Jitu</span>
-                        <span style="font-weight: 600;">5,000</span>
-                    </div>
-                    <div class="receipt-item">
-                        <span>1x Nasi Goreng Spesial</span>
-                        <span style="font-weight: 600;">15,000</span>
-                    </div>
-                </div>
-
-                <div class="receipt-total" style="border-top: 1px solid var(--border-color); margin-bottom: 24px;">
-                    <span style="font-size: 1rem; color: var(--text-muted);">Total Bayar</span>
-                    <span style="color: var(--danger);">KHR 20,000</span>
-                </div>
-
-                <div style="display: flex; flex-direction: column; gap: 12px;">
-                    <button class="btn btn-primary btn-block" onclick="buatDanBukaStruk()">
-                    <i class="fas fa-print"></i> Proses & Buat Struk
-                    </button>
-                    <button class="btn btn-danger btn-block">Batalkan</button>
-                </div>
+            <div class="panel">
+              <div class="panel-header"><span>2. Katalog Menu</span><button class="btn btn-sm btn-outline" onclick="loadMenu()"><i class="fas fa-sync-alt"></i></button></div>
+              <div class="menu-grid" id="data-menu"><div class="empty-state"><i class="fas fa-circle-notch fa-spin"></i><p>Memuat menu...</p></div></div>
             </div>
-        </main>
-    </div>
+          </div>
 
-    <!-- ============================================== -->
-    <!-- 2. ANTARMUKA USER (E-RECEIPT / STRUK DIGITAL) -->
-    <!-- ============================================== -->
-    <div id="user-ui" class="receipt-container" style="display: none;">
-        
-        <div class="receipt-card">
-            <div class="receipt-header">
-                <h1>KUDAJITU AMAZON</h1>
-                <p style="color: var(--text-muted); font-size: 0.9rem;">Bukti Tagihan Digital</p>
+          <aside class="panel order-panel">
+            <div class="panel-header"><span>Ringkasan Order</span></div>
+            <div id="cart-items" class="cart-items"><div class="empty-state"><i class="fas fa-shopping-basket"></i><p>Belum ada item ditambahkan</p></div></div>
+            <div class="receipt-total"><span>TOTAL BAYAR</span><strong>KHR <span id="grand-total">0</span></strong></div>
+            <div class="action-stack">
+              <button id="pay-btn" class="btn btn-primary btn-block" onclick="bayar()"><i class="fas fa-receipt"></i> Proses & Buat Struk</button>
+              <button class="btn btn-danger btn-block" onclick="resetCart()"><i class="fas fa-times"></i> Batalkan</button>
             </div>
-
-            <div class="receipt-body">
-                <div class="receipt-info">
-                    <div>
-                        Tanggal
-                        <strong>19 Agu 2026</strong>
-                    </div>
-                    <div style="text-align: right;">
-                        No. Pesanan
-                        <strong>#INV-0899</strong>
-                    </div>
-                </div>
-
-                <div class="receipt-info">
-                    <div>
-                        Pelanggan
-                        <strong style="font-size: 1.1rem; color: var(--primary);">Meja 4 (Budi)</strong>
-                    </div>
-                    <div style="text-align: right;">
-                        Status
-                        <div class="badge badge-unpaid" style="margin-top: 4px;">Belum Bayar</div>
-                    </div>
-                </div>
-
-                <!-- Rincian -->
-                <div style="margin: 24px 0;">
-                    <div class="receipt-item">
-                        <span>1x Kopi Hitam Jitu</span>
-                        <strong>5,000</strong>
-                    </div>
-                    <div class="receipt-item">
-                        <span>1x Nasi Goreng Spesial</span>
-                        <strong>15,000</strong>
-                    </div>
-                </div>
-
-                <div class="receipt-total">
-                    <span style="font-size: 1rem;">TOTAL BAYAR</span>
-                    <span style="color: var(--danger);">KHR 20,000</span>
-                </div>
+            <div id="link-area" class="link-area hidden">
+              <div class="success-title"><i class="fas fa-check-circle"></i> Transaksi Berhasil</div>
+              <input id="invoice-link" class="form-control" readonly>
+              <div class="link-actions">
+                <button class="btn btn-sm btn-outline" onclick="copyLink()"><i class="fas fa-copy"></i> Copy</button>
+                <a id="wa-link" class="btn btn-sm btn-success" target="_blank" rel="noopener"><i class="fab fa-whatsapp"></i> WhatsApp</a>
+                <a id="open-link" class="btn btn-sm btn-primary" target="_blank" rel="noopener"><i class="fas fa-external-link-alt"></i> Buka</a>
+              </div>
             </div>
-
-            <div style="padding: 20px; background: #fafbfc; text-align: center; border-top: 1px solid var(--border-color);">
-                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">Simpan atau *screenshot* halaman ini sebagai bukti pesanan Anda.</p>
-                <button class="btn btn-primary btn-block" style="border-radius: 50px;">Simpan Struk</button>
-            </div>
+          </aside>
         </div>
+      </section>
 
+      <section id="tab-history" class="tab-view hidden">
+        <div class="panel">
+          <div class="panel-header"><span><i class="fas fa-chart-line"></i> Laporan Transaksi</span><button class="btn btn-sm btn-outline" onclick="loadHistory()"><i class="fas fa-sync-alt"></i> Refresh</button></div>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead><tr><th>Waktu</th><th>Invoice</th><th>Pelanggan</th><th>Pesanan</th><th>Nominal</th><th>Status</th><th>Aksi</th></tr></thead>
+              <tbody id="history-table-body"><tr><td colspan="7" class="empty-cell">Memuat data...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="tab-kelola-menu" class="tab-view hidden">
+        <div class="panel">
+          <div class="panel-header"><span><i class="fas fa-utensils"></i> Kelola Daftar Menu</span></div>
+          <div class="add-menu-grid">
+            <input type="text" id="input-nama-menu" class="form-control" placeholder="Nama menu">
+            <input type="number" id="input-harga-menu" class="form-control" placeholder="Harga (angka)">
+            <button class="btn btn-success" onclick="tambahMenu()"><i class="fas fa-plus"></i> Tambah Menu</button>
+          </div>
+          <div class="table-wrap">
+            <table class="data-table"><thead><tr><th>Nama Item</th><th>Harga</th><th>Aksi</th></tr></thead><tbody id="table-kelola-menu-body"></tbody></table>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="user-ui" class="receipt-container hidden">
+    <div class="receipt-card">
+      <div class="receipt-header"><h1>KUDAJITU AMAZON</h1><p>Bukti Tagihan Digital</p></div>
+      <div class="receipt-body"><div id="receipt-content" class="empty-state"><i class="fas fa-receipt"></i><p>Pilih invoice untuk melihat struk.</p></div></div>
     </div>
-    <script>
-    // Fungsi untuk membuat link struk dan membukanya
-    function buatDanBukaStruk() {
-        // 1. Ambil data dari input form (Contoh sederhana)
-        // Nanti bisa Anda sesuaikan dengan ID input yang sebenarnya
-        let nomorPesanan = "INV-0899"; // Biasanya ini di-generate otomatis
-        let namaMeja = document.querySelector('input[placeholder="Ketik nama atau nomor meja..."]').value;
-        let statusBayar = document.querySelector('select').value;
-        let totalHarga = "20,000"; // Dari perhitungan total Anda
+  </div>
 
-        // Validasi simpel jika nama meja kosong
-        if(namaMeja === "") {
-            namaMeja = "Pelanggan Umum";
-        }
+  <script>
+    // Deploy code.gs as a Web App, then paste the /exec URL here.
+    const API_URL = 'PASTE_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE';
+    const state = { menu: [], cart: [] };
 
-        // 2. Rangkai data menjadi URL Parameter
-        // Menggunakan encodeURIComponent agar spasi dan simbol aman di dalam URL
-        let urlStruk = `struk.html?id=${nomorPesanan}&meja=${encodeURIComponent(namaMeja)}&status=${encodeURIComponent(statusBayar)}&total=${totalHarga}`;
-
-        // 3. Buka halaman struk di tab baru
-        window.open(urlStruk, '_blank');
-
-        // (OPSIONAL) Fitur salin link agar bisa dikirim via WhatsApp
-        let linkLengkap = window.location.origin + '/' + urlStruk;
-        console.log("Link Struk untuk dikirim ke pelanggan: ", linkLengkap);
+    function apiConfigured() { return API_URL && !API_URL.includes('PASTE_GOOGLE'); }
+    function setApiStatus(kind, text) {
+      const el = document.getElementById('api-status');
+      el.className = 'status-pill status-' + kind;
+      el.innerHTML = text;
     }
-</script>
-    
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[c]));
+    }
+    function formatMoney(value) { return Number(value || 0).toLocaleString('en-US'); }
 
+    async function apiGet(action, params = {}) {
+      if (!apiConfigured()) throw new Error('API_URL belum diatur di index.html.');
+      const url = new URL(API_URL);
+      url.searchParams.set('action', action);
+      Object.keys(params).forEach(k => url.searchParams.set(k, params[k]));
+      const response = await fetch(url.toString(), { method: 'GET', mode: 'cors' });
+      if (!response.ok) throw new Error('HTTP ' + response.status);
+      const result = await response.json();
+      if (!result.ok) throw new Error(result.error || 'API error');
+      return result.data;
+    }
+
+    async function apiPost(action, payload = {}) {
+      if (!apiConfigured()) throw new Error('API_URL belum diatur di index.html.');
+      const response = await fetch(API_URL, {
+        method: 'POST', mode: 'cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action, ...payload })
+      });
+      if (!response.ok) throw new Error('HTTP ' + response.status);
+      const result = await response.json();
+      if (!result.ok) throw new Error(result.error || 'API error');
+      return result.data;
+    }
+
+    async function loadMenu() {
+      const target = document.getElementById('data-menu');
+      target.innerHTML = '<div class="empty-state"><i class="fas fa-circle-notch fa-spin"></i><p>Mengambil menu...</p></div>';
+      try {
+        state.menu = await apiGet('getMenu');
+        renderMenuSystem();
+        setApiStatus('ok', '<i class="fas fa-check-circle"></i> Terhubung');
+      } catch (err) {
+        target.innerHTML = '<div class="error-state"><i class="fas fa-triangle-exclamation"></i><p>' + escapeHtml(err.message) + '</p><small>Pastikan URL Web App sudah ditempel.</small></div>';
+        setApiStatus('error', '<i class="fas fa-circle-xmark"></i> Terputus');
+      }
+    }
+
+    function renderMenuSystem() {
+      const data = state.menu;
+      let grid = '';
+      let table = '';
+      data.forEach(item => {
+        const name = escapeHtml(item[0]); const price = Number(item[1]) || 0;
+        grid += '<button class="menu-item" onclick="tambahKeKeranjang(' + JSON.stringify(String(item[0])) + ', ' + price + ')"><span class="menu-item-name">' + name + '</span><span class="menu-item-price">KHR ' + formatMoney(price) + '</span></button>';
+        table += '<tr><td>' + name + '</td><td>KHR ' + formatMoney(price) + '</td><td><button class="btn btn-sm btn-danger" onclick="hapusMenu(' + JSON.stringify(String(item[0])) + ')"><i class="fas fa-trash"></i></button></td></tr>';
+      });
+      document.getElementById('data-menu').innerHTML = grid || '<div class="empty-state"><i class="fas fa-utensils"></i><p>Belum ada menu.</p></div>';
+      document.getElementById('table-kelola-menu-body').innerHTML = table || '<tr><td colspan="3" class="empty-cell">Belum ada menu.</td></tr>';
+    }
+
+    function switchTab(tabName, button) {
+      document.querySelectorAll('.tab-view').forEach(el => el.classList.add('hidden'));
+      document.getElementById('tab-' + tabName).classList.remove('hidden');
+      document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
+      button.classList.add('active');
+      if (tabName === 'history') loadHistory();
+      if (tabName === 'kelola-menu') renderMenuSystem();
+    }
+
+    function showView(viewId) {
+      document.getElementById('admin-ui').classList.toggle('hidden', viewId !== 'admin-ui');
+      document.getElementById('user-ui').classList.toggle('hidden', viewId !== 'user-ui');
+    }
+
+    function tambahKeKeranjang(menu, harga) {
+      const name = document.getElementById('nama-pelanggan').value.trim() || 'Tamu Reguler';
+      let existing = state.cart.find(x => x.namaPelanggan === name && x.menu === menu);
+      if (existing) existing.qty += 1;
+      else state.cart.push({ namaPelanggan: name, menu, harga: Number(harga) || 0, qty: 1 });
+      updateInvoiceUI();
+    }
+
+    function updateInvoiceUI() {
+      let total = 0;
+      let html = '';
+      state.cart.forEach((item, index) => {
+        const subtotal = item.qty * item.harga; total += subtotal;
+        html += '<div class="cart-row"><div><strong>' + escapeHtml(item.menu) + '</strong><small>' + escapeHtml(item.namaPelanggan) + ' · x' + item.qty + '</small></div><div class="cart-right"><span>KHR ' + formatMoney(subtotal) + '</span><div><button onclick="changeQty(' + index + ', -1)">−</button><button onclick="changeQty(' + index + ', 1)">+</button></div></div></div>';
+      });
+      document.getElementById('cart-items').innerHTML = html || '<div class="empty-state"><i class="fas fa-shopping-basket"></i><p>Belum ada item ditambahkan</p></div>';
+      document.getElementById('grand-total').innerText = formatMoney(total);
+      document.getElementById('link-area').classList.add('hidden');
+    }
+    function changeQty(index, delta) { state.cart[index].qty += delta; if (state.cart[index].qty <= 0) state.cart.splice(index, 1); updateInvoiceUI(); }
+    function resetCart() { state.cart = []; document.getElementById('nama-pelanggan').value = ''; updateInvoiceUI(); }
+
+    async function bayar() {
+      if (!state.cart.length) return alert('Keranjang masih kosong!');
+      const button = document.getElementById('pay-btn'); button.disabled = true; button.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Memproses...';
+      try {
+        const grouped = {};
+        state.cart.forEach(item => {
+          if (!grouped[item.namaPelanggan]) grouped[item.namaPelanggan] = { pesanan: [], total: 0 };
+          grouped[item.namaPelanggan].pesanan.push(item.menu + ' (x' + item.qty + ')');
+          grouped[item.namaPelanggan].total += item.qty * item.harga;
+        });
+        const items = Object.keys(grouped).map(nama => ({ nama, pesanan: grouped[nama].pesanan.join(', '), total: grouped[nama].total }));
+        const result = await apiPost('saveTransaction', { items, statusBayar: document.getElementById('status-pembayaran').value });
+        const link = result.link || '';
+        document.getElementById('invoice-link').value = link;
+        document.getElementById('open-link').href = link;
+        document.getElementById('wa-link').href = 'https://wa.me/?text=' + encodeURIComponent('Halo, ini tagihan pesanan Anda di KUDAJITU AMAZON.\n\nCek rincian pesanan di: ' + link + '\n\nTerima kasih!');
+        document.getElementById('link-area').classList.remove('hidden');
+        state.cart = []; updateInvoiceUI();
+        if (link) window.open(link, '_blank');
+      } catch (err) { alert('Transaksi gagal: ' + err.message); }
+      finally { button.disabled = false; button.innerHTML = '<i class="fas fa-receipt"></i> Proses & Buat Struk'; }
+    }
+
+    async function loadHistory() {
+      const body = document.getElementById('history-table-body'); body.innerHTML = '<tr><td colspan="7" class="empty-cell">Mengambil data...</td></tr>';
+      try { renderHistoryTable(await apiGet('getHistory')); } catch (err) { body.innerHTML = '<tr><td colspan="7" class="empty-cell error-text">' + escapeHtml(err.message) + '</td></tr>'; }
+    }
+    function renderHistoryTable(data) {
+      const body = document.getElementById('history-table-body');
+      if (!data.length) { body.innerHTML = '<tr><td colspan="7" class="empty-cell">Belum ada transaksi.</td></tr>'; return; }
+      body.innerHTML = data.map(tx => {
+        const paid = tx.status === 'Sudah Bayar';
+        const next = paid ? 'Belum Bayar' : 'Sudah Bayar';
+        return '<tr><td><small>' + escapeHtml(tx.waktu) + '</small></td><td><span class="invoice-badge">' + escapeHtml(tx.invoiceId) + '</span></td><td><strong>' + escapeHtml(tx.nama) + '</strong></td><td>' + escapeHtml(tx.pesanan) + '</td><td><strong>KHR ' + formatMoney(tx.total) + '</strong></td><td><span class="badge ' + (paid ? 'badge-paid' : 'badge-unpaid') + '">' + escapeHtml(tx.status) + '</span></td><td><button class="btn btn-sm ' + (paid ? 'btn-warning' : 'btn-success') + '" onclick="ubahStatus(' + JSON.stringify(tx.invoiceId) + ', ' + JSON.stringify(next) + ')">' + (paid ? 'Set Belum' : 'Lunas') + '</button></td></tr>';
+      }).join('');
+    }
+    async function ubahStatus(invoiceId, statusBaru) { try { renderHistoryTable(await apiPost('updateStatus', { invoiceId, statusBaru })); } catch (err) { alert('Gagal mengubah status: ' + err.message); } }
+
+    async function tambahMenu() {
+      const namaMenu = document.getElementById('input-nama-menu').value.trim(); const hargaMenu = document.getElementById('input-harga-menu').value.trim();
+      if (!namaMenu || !hargaMenu) return alert('Nama dan harga harus diisi.');
+      try { state.menu = await apiPost('addMenu', { namaMenu, hargaMenu }); renderMenuSystem(); document.getElementById('input-nama-menu').value = ''; document.getElementById('input-harga-menu').value = ''; } catch (err) { alert('Gagal menambah menu: ' + err.message); }
+    }
+    async function hapusMenu(namaMenu) { if (!confirm('Hapus menu "' + namaMenu + '"?')) return; try { state.menu = await apiPost('deleteMenu', { namaMenu }); renderMenuSystem(); } catch (err) { alert('Gagal menghapus menu: ' + err.message); } }
+    async function copyLink() { const input = document.getElementById('invoice-link'); try { await navigator.clipboard.writeText(input.value); alert('Link disalin!'); } catch (_) { input.select(); document.execCommand('copy'); alert('Link disalin!'); } }
+
+    async function loadReceiptFromQuery() {
+      const id = new URLSearchParams(location.search).get('id');
+      if (!id) return;
+      showView('user-ui');
+      try {
+        const rows = await apiGet('getInvoice', { id });
+        if (!rows.length) throw new Error('Invoice tidak ditemukan.');
+        let total = 0; const itemRows = rows.map(row => { total += Number(row.total) || 0; return '<div class="item-row"><span>' + escapeHtml(row.pesanan) + '</span><strong>KHR ' + formatMoney(row.total) + '</strong></div>'; }).join('');
+        document.getElementById('receipt-content').outerHTML = '<div class="receipt-body"><div class="receipt-info"><div>Tanggal<strong>' + escapeHtml(rows[0].waktu) + '</strong></div><div class="text-right">No. Pesanan<strong>#' + escapeHtml(id) + '</strong></div></div><div class="receipt-info"><div>Pelanggan / Meja<strong class="customer-name">' + escapeHtml(rows[0].nama) + '</strong></div><div class="text-right">Status<div class="badge ' + (rows[0].status === 'Sudah Bayar' ? 'badge-paid' : 'badge-unpaid') + '">' + escapeHtml(rows[0].status) + '</div></div></div><div class="items-container">' + itemRows + '</div><div class="receipt-total"><span>TOTAL BAYAR</span><strong>KHR ' + formatMoney(total) + '</strong></div></div>';
+      } catch (err) { document.getElementById('receipt-content').innerHTML = '<div class="error-state"><i class="fas fa-triangle-exclamation"></i><p>' + escapeHtml(err.message) + '</p></div>'; }
+    }
+
+    loadMenu();
+    loadReceiptFromQuery();
+  </script>
 </body>
 </html>

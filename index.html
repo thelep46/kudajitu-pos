@@ -3,170 +3,163 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kudajitu Amazon - Smart POS</title>
-    <!-- Menggunakan Tailwind CSS untuk styling modern -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Kudajitu Amazon | Smart POS</title>
+    <!-- Menghubungkan ke file CSS Murni yang baru kita buat -->
+    <link rel="stylesheet" href="style.css">
+    <!-- Icon pendukung (Opsional) -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
-<body class="bg-gray-50 font-sans text-gray-800">
+<body>
 
-    <!-- DEV MODE TOGGLE (Hanya untuk testing tampilan) -->
-    <div class="bg-indigo-600 p-2 text-center text-sm">
-        <span class="text-white font-semibold mr-4">Pilih Tampilan:</span>
-        <button onclick="switchView('admin')" class="bg-white text-indigo-600 px-3 py-1 rounded shadow hover:bg-gray-100">💻 Mode Admin</button>
-        <button onclick="switchView('user')" class="bg-white text-indigo-600 px-3 py-1 rounded shadow hover:bg-gray-100 ml-2">📱 Mode User (Struk)</button>
+    <!-- NAVIGATOR PENGUJIAN (Hapus kode ini saat sudah online) -->
+    <div style="background:#0f172a; padding:10px; text-align:center;">
+        <button onclick="document.getElementById('admin-ui').style.display='block'; document.getElementById('user-ui').style.display='none';" class="btn" style="background:white; padding:8px 16px;">Tampilan Admin</button>
+        <button onclick="document.getElementById('admin-ui').style.display='none'; document.getElementById('user-ui').style.display='flex';" class="btn" style="background:white; padding:8px 16px; margin-left:10px;">Tampilan Struk (User)</button>
     </div>
 
-    <!-- ========================================== -->
-    <!-- 1. TAMPILAN ADMIN (KASIR / PENGELOLA) -->
-    <!-- ========================================== -->
-    <div id="admin-view" class="block">
-        <!-- Navbar Admin -->
-        <nav class="bg-slate-900 text-white p-4 shadow-md flex justify-between items-center">
-            <div class="text-xl font-bold tracking-wider text-teal-400">KUDAJITU AMAZON <span class="text-sm font-normal text-gray-400">| Admin Panel</span></div>
-            <div class="flex gap-4">
-                <button class="hover:text-teal-400"><i class="fas fa-chart-bar"></i> Laporan</button>
-                <button class="hover:text-teal-400"><i class="fas fa-cog"></i> Pengaturan</button>
+    <!-- ============================================== -->
+    <!-- 1. ANTARMUKA ADMIN (KASIR) -->
+    <!-- ============================================== -->
+    <div id="admin-ui" style="display: block;">
+        
+        <header class="app-header">
+            <div class="brand">KUDAJITU <span>AMAZON</span></div>
+            <div style="display:flex; gap: 16px;">
+                <span style="color: var(--text-muted); font-weight: 500;">Kasir: Admin Pusat</span>
             </div>
-        </nav>
+        </header>
 
-        <div class="max-w-7xl mx-auto mt-8 p-4 grid grid-cols-1 md:grid-cols-3 gap-6">
-            
-            <!-- Kolom Input Pesanan Baru -->
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 md:col-span-2">
-                <h2 class="text-lg font-bold mb-4 border-b pb-2"><i class="fas fa-plus-circle text-teal-500"></i> Buat Pesanan Baru</h2>
-                <div class="grid grid-cols-2 gap-4 mb-4">
-                    <div>
-                        <label class="block text-sm text-gray-500 mb-1">Nama / Meja</label>
-                        <input type="text" placeholder="Contoh: Meja 4 / Budi" class="w-full border rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-teal-500">
+        <main class="container">
+            <!-- Kolom Kiri: Input & Menu -->
+            <div class="panel">
+                <div class="panel-header">
+                    <span>1. Informasi Pemesan</span>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="form-group">
+                        <label class="form-label">Nama Pemesan / Meja</label>
+                        <input type="text" class="form-control" placeholder="Ketik nama atau nomor meja...">
                     </div>
-                    <div>
-                        <label class="block text-sm text-gray-500 mb-1">Status Awal</label>
-                        <select class="w-full border rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-teal-500">
-                            <option>Belum Bayar</option>
-                            <option>Sudah Lunas</option>
+                    <div class="form-group">
+                        <label class="form-label">Status Pembayaran</label>
+                        <select class="form-control">
+                            <option>Belum Lunas (Kasbon)</option>
+                            <option>Lunas</option>
                         </select>
                     </div>
                 </div>
-                
-                <!-- Mockup Daftar Menu -->
-                <h3 class="text-sm font-bold text-gray-500 mt-6 mb-2">Pilih Item Menu:</h3>
-                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    <div class="border rounded-lg p-3 cursor-pointer hover:border-teal-500 hover:bg-teal-50">
-                        <div class="font-semibold">Kopi Hitam</div>
-                        <div class="text-teal-600 text-sm">KHR 5,000</div>
+
+                <div class="panel-header" style="margin-top: 32px;">
+                    <span>2. Katalog Menu</span>
+                </div>
+                <!-- Tempat menu dimuat dari Google Sheet -->
+                <div class="menu-grid" id="data-menu">
+                    <!-- Contoh Data Dummy -->
+                    <div class="menu-item">
+                        <div class="menu-item-name">Kopi Hitam Jitu</div>
+                        <div class="menu-item-price">KHR 5,000</div>
                     </div>
-                    <div class="border rounded-lg p-3 cursor-pointer hover:border-teal-500 hover:bg-teal-50">
-                        <div class="font-semibold">Nasi Goreng</div>
-                        <div class="text-teal-600 text-sm">KHR 12,000</div>
+                    <div class="menu-item">
+                        <div class="menu-item-name">Nasi Goreng Spesial</div>
+                        <div class="menu-item-price">KHR 15,000</div>
+                    </div>
+                    <div class="menu-item">
+                        <div class="menu-item-name">Es Teh Manis</div>
+                        <div class="menu-item-price">KHR 3,000</div>
                     </div>
                 </div>
             </div>
 
-            <!-- Kolom Manajemen Tagihan Aktif -->
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                <h2 class="text-lg font-bold mb-4 border-b pb-2"><i class="fas fa-list-check text-blue-500"></i> Tagihan Aktif</h2>
+            <!-- Kolom Kanan: Rincian & Aksi -->
+            <div class="panel" style="align-self: start;">
+                <div class="panel-header">
+                    <span>Ringkasan Order</span>
+                </div>
                 
-                <!-- Card Tagihan 1 -->
-                <div class="border rounded-lg p-4 mb-3 border-l-4 border-l-yellow-400">
-                    <div class="flex justify-between items-start mb-2">
-                        <div>
-                            <div class="font-bold">Meja 4 (Budi)</div>
-                            <div class="text-xs text-gray-400">ID: #INV-001</div>
-                        </div>
-                        <span class="bg-yellow-100 text-yellow-700 text-xs px-2 py-1 rounded font-bold">Belum Bayar</span>
+                <div style="min-height: 200px; color: var(--text-muted); font-size: 0.9rem;">
+                    <div class="receipt-item">
+                        <span>1x Kopi Hitam Jitu</span>
+                        <span style="font-weight: 600;">5,000</span>
                     </div>
-                    <div class="text-xl font-bold text-gray-800 mb-3">KHR 17,000</div>
-                    <div class="flex gap-2">
-                        <button class="flex-1 bg-blue-600 text-white text-sm py-2 rounded hover:bg-blue-700"><i class="fas fa-share-nodes"></i> Link Struk</button>
-                        <button class="flex-1 bg-green-500 text-white text-sm py-2 rounded hover:bg-green-600"><i class="fas fa-check"></i> Lunas</button>
+                    <div class="receipt-item">
+                        <span>1x Nasi Goreng Spesial</span>
+                        <span style="font-weight: 600;">15,000</span>
                     </div>
                 </div>
 
+                <div class="receipt-total" style="border-top: 1px solid var(--border-color); margin-bottom: 24px;">
+                    <span style="font-size: 1rem; color: var(--text-muted);">Total Bayar</span>
+                    <span style="color: var(--danger);">KHR 20,000</span>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <button class="btn btn-primary btn-block"><i class="fas fa-print"></i> Proses & Simpan</button>
+                    <button class="btn btn-danger btn-block">Batalkan</button>
+                </div>
             </div>
-        </div>
+        </main>
     </div>
 
-    <!-- ========================================== -->
-    <!-- 2. TAMPILAN USER (STRUK / TAGIHAN MOBILE)  -->
-    <!-- ========================================== -->
-    <div id="user-view" class="hidden min-h-screen bg-gray-100 flex items-center justify-center p-4">
+    <!-- ============================================== -->
+    <!-- 2. ANTARMUKA USER (E-RECEIPT / STRUK DIGITAL) -->
+    <!-- ============================================== -->
+    <div id="user-ui" class="receipt-container" style="display: none;">
         
-        <!-- Card Struk (Lebar disesuaikan untuk layar HP) -->
-        <div class="bg-white w-full max-w-sm rounded-2xl shadow-xl overflow-hidden relative">
-            
-            <!-- Aksen warna status -->
-            <div class="h-3 bg-yellow-400 w-full"></div>
-
-            <div class="p-6 text-center border-b border-dashed border-gray-300">
-                <h1 class="text-2xl font-black text-slate-800 tracking-tight">KUDAJITU AMAZON</h1>
-                <p class="text-sm text-gray-500 mt-1">Struk Digital / E-Receipt</p>
+        <div class="receipt-card">
+            <div class="receipt-header">
+                <h1>KUDAJITU AMAZON</h1>
+                <p style="color: var(--text-muted); font-size: 0.9rem;">Bukti Tagihan Digital</p>
             </div>
 
-            <div class="p-6">
-                <div class="flex justify-between text-sm mb-4">
+            <div class="receipt-body">
+                <div class="receipt-info">
                     <div>
-                        <p class="text-gray-500">Tanggal</p>
-                        <p class="font-semibold">19 Agustus 2026</p>
+                        Tanggal
+                        <strong>19 Agu 2026</strong>
                     </div>
-                    <div class="text-right">
-                        <p class="text-gray-500">No. Tagihan</p>
-                        <p class="font-semibold">#INV-001</p>
+                    <div style="text-align: right;">
+                        No. Pesanan
+                        <strong>#INV-0899</strong>
                     </div>
                 </div>
 
-                <div class="flex justify-between text-sm mb-6">
+                <div class="receipt-info">
                     <div>
-                        <p class="text-gray-500">Pemesan</p>
-                        <p class="font-semibold text-lg">Meja 4 (Budi)</p>
+                        Pelanggan
+                        <strong style="font-size: 1.1rem; color: var(--primary);">Meja 4 (Budi)</strong>
                     </div>
-                    <div class="text-right">
-                        <p class="text-gray-500">Status</p>
-                        <span class="inline-block bg-yellow-100 text-yellow-700 font-bold px-2 py-1 rounded text-xs mt-1">BELUM BAYAR</span>
-                    </div>
-                </div>
-
-                <!-- Rincian Pesanan -->
-                <div class="space-y-3 mb-6">
-                    <div class="flex justify-between text-sm">
-                        <span>1x Kopi Hitam</span>
-                        <span>KHR 5,000</span>
-                    </div>
-                    <div class="flex justify-between text-sm">
-                        <span>1x Nasi Goreng</span>
-                        <span>KHR 12,000</span>
+                    <div style="text-align: right;">
+                        Status
+                        <div class="badge badge-unpaid" style="margin-top: 4px;">Belum Bayar</div>
                     </div>
                 </div>
 
-                <!-- Total -->
-                <div class="border-t border-dashed border-gray-300 pt-4 flex justify-between items-center">
-                    <span class="text-gray-500 font-bold">TOTAL BAYAR</span>
-                    <span class="text-2xl font-black text-red-600">KHR 17,000</span>
+                <!-- Rincian -->
+                <div style="margin: 24px 0;">
+                    <div class="receipt-item">
+                        <span>1x Kopi Hitam Jitu</span>
+                        <strong>5,000</strong>
+                    </div>
+                    <div class="receipt-item">
+                        <span>1x Nasi Goreng Spesial</span>
+                        <strong>15,000</strong>
+                    </div>
+                </div>
+
+                <div class="receipt-total">
+                    <span style="font-size: 1rem;">TOTAL BAYAR</span>
+                    <span style="color: var(--danger);">KHR 20,000</span>
                 </div>
             </div>
 
-            <!-- Tombol Aksi User -->
-            <div class="bg-gray-50 p-6 text-center">
-                <p class="text-xs text-gray-500 mb-4">Tunjukkan struk ini ke kasir untuk melakukan pembayaran.</p>
-                <button class="w-full bg-slate-900 text-white font-bold py-3 rounded-xl hover:bg-slate-800 shadow-lg">
-                    <i class="fas fa-download mr-2"></i> Simpan Struk
-                </button>
+            <div style="padding: 20px; background: #fafbfc; text-align: center; border-top: 1px solid var(--border-color);">
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">Simpan atau *screenshot* halaman ini sebagai bukti pesanan Anda.</p>
+                <button class="btn btn-primary btn-block" style="border-radius: 50px;">Simpan Struk</button>
             </div>
         </div>
 
     </div>
 
-    <!-- Script untuk Toggle View (Hanya untuk testing) -->
-    <script>
-        function switchView(view) {
-            if(view === 'admin') {
-                document.getElementById('admin-view').classList.remove('hidden');
-                document.getElementById('user-view').classList.add('hidden');
-            } else {
-                document.getElementById('admin-view').classList.add('hidden');
-                document.getElementById('user-view').classList.remove('hidden');
-            }
-        }
-    </script>
 </body>
 </html>

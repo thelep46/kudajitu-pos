@@ -12,12 +12,19 @@
   }
   function openModal(id){const m=document.getElementById(id);if(!m)return false;m.classList.add('open');m.setAttribute('aria-hidden','false');return true;}
   function closeModal(id){const m=document.getElementById(id);if(!m)return;m.classList.remove('open');m.setAttribute('aria-hidden','true');}
+  function applySettingsCategories(){
+    if(typeof window.applyKudajituCategories==='function'){
+      window.applyKudajituCategories();
+    }
+  }
   function bind(){
     const openTx=document.getElementById('v2-open-tx');
     const openConv=document.getElementById('v2-open-conv');
     const txModal=document.getElementById('v2-tx-modal');
     const convModal=document.getElementById('v2-conv-modal');
     if(!openTx||!txModal)return false;
+    // Finance V2 membuat modal secara dinamis. Terapkan kategori Settings setelah modal tersedia.
+    applySettingsCategories();
     if(!openTx.dataset.v2Bound){openTx.dataset.v2Bound='1';openTx.addEventListener('click',()=>openModal('v2-tx-modal'));}
     if(openConv&&!openConv.dataset.v2Bound){openConv.dataset.v2Bound='1';openConv.addEventListener('click',()=>openModal('v2-conv-modal'));}
     document.querySelectorAll('[data-close="v2-tx-modal"],[data-close="v2-conv-modal"]').forEach(b=>{if(!b.dataset.v2Bound){b.dataset.v2Bound='1';b.addEventListener('click',()=>closeModal(b.dataset.close));}});

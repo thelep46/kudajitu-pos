@@ -12,11 +12,11 @@ const defaults={
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
 function get(){try{return Object.assign({},defaults,JSON.parse(localStorage.getItem(KEY)||'{}'));}catch(_){return JSON.parse(JSON.stringify(defaults));}}
 function save(s){localStorage.setItem(KEY,JSON.stringify(s));window.dispatchEvent(new CustomEvent('kudajitu-settings-changed',{detail:s}));}
+function loadCss(){if(document.getElementById('settings-css'))return;const l=document.createElement('link');l.id='settings-css';l.rel='stylesheet';l.href='settings.css?v=20260820-1801';document.head.appendChild(l);}
 function render(){
+ loadCss();
  const main=document.querySelector('main.container'); if(!main||document.getElementById('tab-settings'))return;
- const nav=document.querySelector('.app-nav'); if(nav&&!document.getElementById('settings-nav')){
-   const b=document.createElement('button');b.id='settings-nav';b.className='nav-tab';b.innerHTML='<i class="fas fa-sliders"></i> Pengaturan';b.onclick=()=>switchTab('settings',b);nav.appendChild(b);
- }
+ const nav=document.querySelector('.app-nav'); if(nav&&!document.getElementById('settings-nav')){const b=document.createElement('button');b.id='settings-nav';b.className='nav-tab';b.innerHTML='<i class="fas fa-sliders"></i> Pengaturan';b.onclick=()=>switchTab('settings',b);nav.appendChild(b);}
  const sec=document.createElement('section');sec.id='tab-settings';sec.className='tab-view hidden';sec.innerHTML=`
  <div class="settings-hero"><div><span class="settings-kicker">CONTROL CENTER</span><h2><i class="fas fa-sliders"></i> Pengaturan</h2><p>Kelola konfigurasi KUDAJITU POS dari satu tempat.</p></div><button class="btn btn-outline" id="settings-reset"><i class="fas fa-rotate-left"></i> Reset Default</button></div>
  <div class="settings-grid">
@@ -29,18 +29,10 @@ function render(){
  </div>`;
  main.appendChild(sec);bind();loadValues();
 }
-function bind(){
- const s=get();
- document.getElementById('add-category').onclick=()=>{const i=document.getElementById('new-category'),v=i.value.trim();if(!v)return;if(!s.categories.includes(v)){s.categories.push(v);save(s);renderLists();}i.value='';};
- document.getElementById('save-pos').onclick=()=>{s.pos.storeName=document.getElementById('set-store').value.trim()||defaults.pos.storeName;s.pos.invoicePrefix=document.getElementById('set-prefix').value.trim()||'INV';s.pos.defaultCurrency=document.getElementById('set-currency').value;save(s);toast('Pengaturan POS disimpan.');};
- document.getElementById('save-receipt').onclick=()=>{s.receipt.showUnitPrice=document.getElementById('set-unit').checked;s.receipt.showQr=document.getElementById('set-qr').checked;s.receipt.footer=document.getElementById('set-footer').value;save(s);toast('Pengaturan struk disimpan.');};
- document.getElementById('set-compact').onchange=e=>{s.appearance.compact=e.target.checked;save(s);document.body.classList.toggle('settings-compact',e.target.checked);};
- document.getElementById('settings-reset').onclick=()=>{if(confirm('Kembalikan semua pengaturan tampilan ke default?')){save(JSON.parse(JSON.stringify(defaults)));loadValues();toast('Pengaturan dikembalikan ke default.');}};
-}
+function bind(){const s=get();document.getElementById('add-category').onclick=()=>{const i=document.getElementById('new-category'),v=i.value.trim();if(!v)return;if(!s.categories.includes(v)){s.categories.push(v);save(s);renderLists();}i.value='';};document.getElementById('save-pos').onclick=()=>{s.pos.storeName=document.getElementById('set-store').value.trim()||defaults.pos.storeName;s.pos.invoicePrefix=document.getElementById('set-prefix').value.trim()||'INV';s.pos.defaultCurrency=document.getElementById('set-currency').value;save(s);toast('Pengaturan POS disimpan.');};document.getElementById('save-receipt').onclick=()=>{s.receipt.showUnitPrice=document.getElementById('set-unit').checked;s.receipt.showQr=document.getElementById('set-qr').checked;s.receipt.footer=document.getElementById('set-footer').value;save(s);toast('Pengaturan struk disimpan.');};document.getElementById('set-compact').onchange=e=>{s.appearance.compact=e.target.checked;save(s);document.body.classList.toggle('settings-compact',e.target.checked);};document.getElementById('settings-reset').onclick=()=>{if(confirm('Kembalikan semua pengaturan tampilan ke default?')){save(JSON.parse(JSON.stringify(defaults)));loadValues();toast('Pengaturan dikembalikan ke default.');}};}
 function loadValues(){const s=get();document.getElementById('set-store').value=s.pos.storeName;document.getElementById('set-prefix').value=s.pos.invoicePrefix;document.getElementById('set-unit').checked=!!s.receipt.showUnitPrice;document.getElementById('set-qr').checked=s.receipt.showQr!==false;document.getElementById('set-footer').value=s.receipt.footer;document.getElementById('set-compact').checked=!!s.appearance.compact;document.body.classList.toggle('settings-compact',!!s.appearance.compact);const c=document.getElementById('set-currency');c.innerHTML=s.currencies.map(x=>`<option value="${esc(x.code)}">${esc(x.label)}</option>`).join('');c.value=s.pos.defaultCurrency;renderLists();}
 function renderLists(){const s=get();document.getElementById('settings-categories').innerHTML=s.categories.map((x,i)=>`<div class="settings-row"><span><i class="fas fa-tag"></i> ${esc(x)}</span>${s.categories.length>1?`<button class="icon-btn" data-cat="${i}" title="Hapus"><i class="fas fa-trash"></i></button>`:''}</div>`).join('');document.querySelectorAll('[data-cat]').forEach(b=>b.onclick=()=>{const i=Number(b.dataset.cat);if(confirm('Hapus kategori ini?')){s.categories.splice(i,1);save(s);renderLists();}});document.getElementById('settings-accounts').innerHTML=s.accounts.map(x=>`<div class="settings-row"><span><i class="fas fa-building-columns"></i> ${esc(x)}</span><span class="settings-badge">Aktif</span></div>`).join('');applyCategories(s.categories);}
 function applyCategories(cats){['finance-category','budget-category'].forEach(id=>{const el=document.getElementById(id);if(!el)return;const old=el.value;el.innerHTML=cats.map(x=>`<option>${esc(x)}</option>`).join('');if(cats.includes(old))el.value=old;});}
 function toast(msg){let t=document.getElementById('settings-toast');if(!t){t=document.createElement('div');t.id='settings-toast';t.className='settings-toast';document.body.appendChild(t);}t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800);}
-window.getKudajituSettings=get;window.applyKudajituCategories=()=>applyCategories(get().categories);
-window.addEventListener('DOMContentLoaded',render);window.addEventListener('kudajitu-settings-changed',e=>{applyCategories(e.detail.categories);});
+window.getKudajituSettings=get;window.applyKudajituCategories=()=>applyCategories(get().categories);window.addEventListener('DOMContentLoaded',render);window.addEventListener('kudajitu-settings-changed',e=>applyCategories(e.detail.categories));
 })();

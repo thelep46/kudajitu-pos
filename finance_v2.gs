@@ -35,10 +35,19 @@ function financeV2SaveTransaction_(p){
 }
 function financeV2SaveTransaction(p){return financeV2SaveTransaction_(p);}
 function financeV2Transactions(month){
-  const s=SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName('Transactions');if(!s)return {rows:[],summary:{}};const ym=String(month||Utilities.formatDate(new Date(),Session.getScriptTimeZone(),'yyyy-MM'));const v=s.getDataRange().getValues().slice(1).filter(r=>r[0]&&String(r[1]).slice(0,7)===ym).reverse();const summary={incomeUSD:0,incomeKHR:0,expenseUSD:0,expenseKHR:0,count:v.length};
-  const rows=v.map(r=>{const o={id:String(r[0]),tanggal:Utilities.formatDate(new Date(r[1]),Session.getScriptTimeZone(),'yyyy-MM-dd'),jenis:String(r[2]),kategori:String(r[3]),akun:String(r[4]),currency:String(r[5]),nominal:Number(r[6]||0),keterangan:String(r[7]||'')};if(o.jenis==='Pemasukan')summary['income'+o.currency]+=o.nominal;else summary['expense'+o.currency]+=o.nominal;return o;});return {rows,summary};
+  const s=SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName('Transactions');if(!s)return {rows:[],summary:{}};
+  const tz=Session.getScriptTimeZone(),ym=String(month||Utilities.formatDate(new Date(),tz,'yyyy-MM'));
+  const v=s.getDataRange().getValues().slice(1).filter(r=>{
+    if(!r[0]||!r[1])return false;
+    const d=r[1] instanceof Date?r[1]:new Date(r[1]);
+    if(isNaN(d.getTime()))return false;
+    return Utilities.formatDate(d,tz,'yyyy-MM')===ym;
+  }).reverse();
+  const summary={incomeUSD:0,incomeKHR:0,expenseUSD:0,expenseKHR:0,count:v.length};
+  const rows=v.map(r=>{const d=r[1] instanceof Date?r[1]:new Date(r[1]);const o={id:String(r[0]),tanggal:Utilities.formatDate(d,tz,'yyyy-MM-dd'),jenis:String(r[2]),kategori:String(r[3]),akun:String(r[4]),currency:String(r[5]),nominal:Number(r[6]||0),keterangan:String(r[7]||'')};if(o.jenis==='Pemasukan')summary['income'+o.currency]+=o.nominal;else summary['expense'+o.currency]+=o.nominal;return o;});
+  return {rows,summary};
 }
-function financeV2DeleteTransaction(p){const s=SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName('Transactions'),rows=s.getDataRange().getValues(),idx=rows.findIndex((r,i)=>i>0&&String(r[0])===String(p.id));if(idx<1)throw new Error('Transaksi tidak ditemukan');const type=String(rows[idx][2]),currency=String(rows[idx][5]),amount=Number(rows[idx][6]||0),account=String(rows[idx][4]);const ar=financeV2AccountRow_(account),balance=currency==='USD'?ar.usd:ar.khr,next=type==='Pengeluaran'?balance+amount:balance-amount;if(next<0)throw new Error('Transaksi tidak dapat dihapus karena saldo saat ini tidak memungkinkan pembalikan.');if(currency==='USD')ar.sheet.getRange(ar.row,3).setValue(next);else ar.sheet.getRange(ar.row,4).setValue(next);s.deleteRow(idx+1);return {ok:true};}
+function financeV2DeleteTransaction(p){const s=SpreadsheetApp.openById(SPREADSHEET_ID),rows=s.getDataRange().getValues(),idx=rows.findIndex((r,i)=>i>0&&String(r[0])===String(p.id));if(idx<1)throw new Error('Transaksi tidak ditemukan');const type=String(rows[idx][2]),currency=String(rows[idx][5]),amount=Number(rows[idx][6]||0),account=String(rows[idx][4]);const ar=financeV2AccountRow_(account),balance=currency==='USD'?ar.usd:ar.khr,next=type==='Pengeluaran'?balance+amount:balance-amount;if(next<0)throw new Error('Transaksi tidak dapat dihapus karena saldo saat ini tidak memungkinkan pembalikan.');if(currency==='USD')ar.sheet.getRange(ar.row,3).setValue(next);else ar.sheet.getRange(ar.row,4).setValue(next);s.deleteRow(idx+1);return {ok:true};}
 function financeV2Dashboard(month){return {accounts:financeV2Accounts_(),transactions:financeV2Transactions(month),conversions:financeV2Conversions()};}
 function financeV2Api(action,p){if(action==='setup')return financeV2Setup();if(action==='accounts')return financeV2Accounts();if(action==='saveAccount')return financeV2SaveAccount(p);if(action==='saveConversion')return financeV2SaveConversion(p);if(action==='conversions')return financeV2Conversions();if(action==='saveTransaction')return financeV2SaveTransaction(p);if(action==='transactions')return financeV2Transactions(p&&p.month);if(action==='deleteTransaction')return financeV2DeleteTransaction(p);if(action==='dashboard')return financeV2Dashboard(p&&p.month);throw new Error('Finance V2 action tidak dikenal: '+action);}
 function getCurrencyAccounts(){return financeV2Accounts();}

@@ -18,4 +18,21 @@ async function reconcileAccount(){const akun=$('reconcile-account').value,actual
 async function exportFinance(){try{const d=await financeRequest('exportFinance',{month:financeMonth()});const blob=new Blob([d.csv],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=d.filename;a.click();URL.revokeObjectURL(url)}catch(e){alert(`Export gagal: ${e.message}`)}}
 function initFinance(){const d=new Date(),iso=new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10);if($('finance-date')&&!$('finance-date').value)$('finance-date').value=iso;if($('transfer-date')&&!$('transfer-date').value)$('transfer-date').value=iso;if($('reconcile-date')&&!$('reconcile-date').value)$('reconcile-date').value=iso;if($('finance-month'))$('finance-month').value=financeState.filterMonth;loadFinance()}
 document.addEventListener('click',e=>{const b=e.target.closest('.finance-delete');if(b)deleteFinance(b.dataset.id)});
-window.addEventListener('DOMContentLoaded',()=>{const s=document.createElement('script');s.src='currency.js?v=20260820-1522';s.defer=true;document.body.appendChild(s)});
+
+function loadCurrencyModule(){
+  if(document.getElementById('currency-module')) return;
+  if(document.querySelector('script[data-currency-module]')) return;
+  const s=document.createElement('script');
+  s.src='currency.js?v=20260820-1535';
+  s.dataset.currencyModule='1';
+  s.async=false;
+  s.onload=()=>{ if(typeof window.loadCurrency==='function') window.loadCurrency(); };
+  s.onerror=()=>console.error('Gagal memuat currency.js');
+  document.body.appendChild(s);
+}
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded',loadCurrencyModule,{once:true});
+  setTimeout(loadCurrencyModule,500);
+}else{
+  loadCurrencyModule();
+}

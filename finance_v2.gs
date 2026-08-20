@@ -49,7 +49,7 @@ function financeV2SaveConversion_(p){
   PropertiesService.getScriptProperties().setProperty('LAST_FX_RATE',String(rate));
   return {id,nominalDari:amount,nominalKe:result,kurs:rate};
 }
-function financeV2SaveConversion(p){return financeV2SaveConversion_(p);}
+function financeV2SaveConversion(p){const conversion=financeV2SaveConversion_(p);return {conversion:conversion};}
 function financeV2Conversions(){
   const s=SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName('Conversions');if(!s)return {rows:[],lastRate:null};
   const v=s.getDataRange().getValues().slice(1).filter(r=>r[0]);

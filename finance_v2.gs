@@ -63,3 +63,13 @@ function financeV2Api(action,p){
   if(action==='conversions')return financeV2Conversions();
   throw new Error('Finance V2 action tidak dikenal: '+action);
 }
+
+// Compatibility aliases: the existing code.gs router calls these names.
+function getCurrencyAccounts(){return financeV2Accounts();}
+function getCurrencyConversions(limit){
+  const data=financeV2Conversions();
+  if(limit) data.rows=data.rows.slice(0,Math.max(1,Number(limit)||50));
+  return data;
+}
+function saveCurrencyAccount(p){return financeV2SaveAccount(p);}
+function saveCurrencyConversion(p){return financeV2SaveConversion(p);}

@@ -35,6 +35,10 @@
     if(!header||document.getElementById('security-btn'))return;
     const b=document.createElement('button');b.id='security-btn';b.className='btn btn-sm btn-outline';b.type='button';b.innerHTML='<i class="fas fa-key"></i> Keamanan';b.onclick=openSecurity;header.insertBefore(b,header.lastElementChild);
   }
+  function loadSettingsModule(){
+    if(document.querySelector('script[data-settings-module]'))return;
+    const s=document.createElement('script');s.src='settings.js?v=20260820-1800';s.dataset.settingsModule='1';s.defer=true;document.body.appendChild(s);
+  }
   window.openSecurity=openSecurity;
-  window.addEventListener('DOMContentLoaded',initSecurity);
+  window.addEventListener('DOMContentLoaded',()=>{initSecurity();loadSettingsModule();});
 })();

@@ -1,6 +1,6 @@
 /** KUDAJITU POS - Finance V2 router bridge
- * IMPORTANT: rename the legacy doGet/doPost in code.gs to doGetLegacy/doPostLegacy
- * before deploying this file. This router keeps POS actions intact and routes Finance V2 actions.
+ * Unified router: keeps POS, Settings, Team, and Finance V2 actions together.
+ * IMPORTANT: this file defines the active doGet/doPost entry points.
  */
 function doGet(e){
   const p=e&&e.parameter?e.parameter:{};
@@ -8,6 +8,7 @@ function doGet(e){
     if(p.action==='login') return jsonResponse({ok:true,data:loginAdmin(p.username,p.password)});
     if(p.action==='getInvoice') return jsonResponse({ok:true,data:getInvoiceData(p.id||'')});
     requireAuth(p.token);
+    if(p.action==='getSettings') return jsonResponse({ok:true,data:settingsApiGet_(p)});
     if(p.action==='getMenu') return jsonResponse({ok:true,data:getMenuData()});
     if(p.action==='getHistory') return jsonResponse({ok:true,data:getHistoryData()});
     if(p.action==='getFinance') return jsonResponse({ok:true,data:getFinanceData(p.month||'')});
@@ -29,7 +30,15 @@ function doPost(e){
     if(b.action==='changePassword') return jsonResponse({ok:true,data:changeAdminPassword(b.token,b.currentPassword,b.newPassword)});
     requireAuth(b.token);
     let d;
-    if(b.action==='saveTransaction') d=simpanTransaksi(b.items||[],b.statusBayar);
+    if(b.action==='getSettings') d=settingsApiGet_(b);
+    else if(b.action==='saveSettings') d=settingsApiSave_(b);
+    else if(b.action==='addTeamMember') d=teamApiSaveMember_(b);
+    else if(b.action==='deleteTeamMember') d=teamApiDeleteMember_(b);
+    else if(b.action==='saveTeamPayment') d=teamApiSavePayment_(b);
+    else if(b.action==='getTeam') d=teamApiGet_();
+    else if(b.action==='saveCategory') d=settingsApiSaveCategory_(b);
+    else if(b.action==='deleteCategory') d=settingsApiDeleteCategory_(b);
+    else if(b.action==='saveTransaction') d=simpanTransaksi(b.items||[],b.statusBayar);
     else if(b.action==='addMenu') d=tambahMenuBaru(b.namaMenu,b.hargaMenu);
     else if(b.action==='deleteMenu') d=hapusMenuBerdasarkanNama(b.namaMenu);
     else if(b.action==='updateStatus') d=updateStatusTransaksi(b.invoiceId,b.statusBaru);

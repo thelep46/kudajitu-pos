@@ -8,6 +8,13 @@ const TEAM_PAYMENT_HEADERS=['ID','Tanggal','Nama','Nominal KHR','Metode','Catata
 function ensureTeamMemberSheet_(){return ensureSheet('TeamMembers',TEAM_MEMBER_HEADERS)}
 function ensureTeamPaymentSheet_(){return ensureSheet('TeamPayments',TEAM_PAYMENT_HEADERS)}
 
+/** Safe one-time setup: creates only missing Team sheets. Never deletes or clears data. */
+function teamSetup(){
+  const members=ensureTeamMemberSheet_();
+  const payments=ensureTeamPaymentSheet_();
+  return {ok:true,teamMembers:members.getName(),teamPayments:payments.getName(),message:'TeamMembers dan TeamPayments siap digunakan.'};
+}
+
 function teamReadMembers_(){
   const s=ensureTeamMemberSheet_(),d=s.getDataRange().getValues();
   return d.slice(1).filter(r=>String(r[1]||'').trim()).map(r=>({id:String(r[0]||''),nama:String(r[1]||''),status:String(r[2]||'Aktif'),createdAt:r[3] instanceof Date?Utilities.formatDate(r[3],Session.getScriptTimeZone(),'dd/MM/yyyy HH:mm'):String(r[3]||'')}));

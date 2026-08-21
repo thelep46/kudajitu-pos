@@ -4,7 +4,7 @@ const FINANCE_HEADERS=['ID','Tanggal','Jenis','Kategori','Keterangan','Nominal K
 const FINANCE_CATEGORIES=['Makanan','Tempat Tinggal','Transportasi','Belanja','Internet/Pulsa','Hiburan','Kesehatan','Kebutuhan Kerja','Tagihan','Gaji/Pemasukan','Penyesuaian Saldo','Lainnya'];
 const DEFAULT_ACCOUNTS=['Cash','ABA','AC Bank','Wing','Pi Pay'];
 const MULTI_DEFAULT_ACCOUNTS=['ABA Bank','Wing','ACLEDA'];
-const AUTH_TOKEN_TTL=21600;
+const AUTH_TOKEN_TTL = 21600; // 6 jam
 function getSheet(n){if(SPREADSHEET_ID)return SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(n);return SpreadsheetApp.getActiveSpreadsheet().getSheetByName(n)}
 function ensureSheet(n,h){const ss=SpreadsheetApp.openById(SPREADSHEET_ID);let s=ss.getSheetByName(n);if(!s){s=ss.insertSheet(n);s.getRange(1,1,1,h.length).setValues([h]);s.setFrozenRows(1);s.getRange(1,1,1,h.length).setFontWeight('bold')}return s}
 function ensureFinanceSheet(){return ensureSheet('Keuangan',FINANCE_HEADERS)}
@@ -16,11 +16,89 @@ function ensureConversionSheet(){return ensureSheet('Konversi Mata Uang',['ID','
 function jsonResponse(p){return ContentService.createTextOutput(JSON.stringify(p)).setMimeType(ContentService.MimeType.JSON)}
 function sha256(v){const bytes=Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256,String(v),Utilities.Charset.UTF_8);return bytes.map(b=>(b<0?b+256:b).toString(16).padStart(2,'0')).join('')}
 function getAdminPasswordHash(){return PropertiesService.getScriptProperties().getProperty('ADMIN_PASSWORD_HASH')||''}
-function issueToken(){const token=Utilities.getUuid()+'-'+Utilities.getUuid();CacheService.getScriptCache().put('AUTH_'+token,'admin',AUTH_TOKEN_TTL);return token}
-function requireAuth(token){if(!token)throw new Error('Sesi admin belum login.');if(CacheService.getScriptCache().get('AUTH_'+token)!=='admin')throw new Error('Sesi login sudah berakhir. Silakan login kembali.')}
+function issueToken(){
+  const token = Utilities.getUuid() + '-' + Utilities.getUuid();
+  const expiresAt = Date.now() + (AUTH_TOKEN_TTL * 1000);
+
+  const sessions = PropertiesService.getScriptProperties();
+
+  sessions.setProperty(
+    'AUTH_SESSION_' + token,
+    JSON.stringify({
+      user: 'admin',
+      expiresAt: expiresAt
+    })
+  );
+
+  // Cache hanya sebagai cache cepat, bukan sumber utama.
+  CacheService.getScriptCache().put(
+    'AUTH_' + token,
+    'admin',
+    AUTH_TOKEN_TTL
+  );
+
+  return token;
+}
+
+function requireAuth(token){
+  if(!token){
+    throw new Error('Sesi admin belum login.');
+  }
+
+  const key = 'AUTH_SESSION_' + token;
+  const props = PropertiesService.getScriptProperties();
+  const raw = props.getProperty(key);
+
+  if(!raw){
+    throw new Error('Sesi login sudah berakhir. Silakan login kembali.');
+  }
+
+  let session;
+
+  try{
+    session = JSON.parse(raw);
+  }catch(err){
+    props.deleteProperty(key);
+    throw new Error('Sesi login tidak valid. Silakan login kembali.');
+  }
+
+  if(
+    !session ||
+    session.user !== 'admin' ||
+    !session.expiresAt ||
+    Date.now() >= Number(session.expiresAt)
+  ){
+    props.deleteProperty(key);
+    CacheService.getScriptCache().remove('AUTH_' + token);
+    throw new Error('Sesi login sudah berakhir. Silakan login kembali.');
+  }
+
+  // Refresh cache supaya request berikutnya cepat.
+  CacheService.getScriptCache().put(
+    'AUTH_' + token,
+    'admin',
+    AUTH_TOKEN_TTL
+  );
+
+  return true;
+}
 function loginAdmin(username,password){const u=String(username||'').trim(),p=String(password||'');const hash=getAdminPasswordHash();if(!hash)throw new Error('Login belum dikonfigurasi. Tambahkan ADMIN_PASSWORD_HASH di Script Properties.');if(u!=='admin'||sha256(p)!==hash)throw new Error('Username atau password salah.');return{token:issueToken(),expiresIn:AUTH_TOKEN_TTL,user:'Admin Pusat'}}
-function changeAdminPassword(token,currentPassword,newPassword){requireAuth(token);const current=String(currentPassword||''),next=String(newPassword||'');if(!current||!next)throw new Error('Password lama dan password baru wajib diisi.');if(next.length<8)throw new Error('Password baru minimal 8 karakter.');if(sha256(current)!==getAdminPasswordHash())throw new Error('Password lama salah.');if(current===next)throw new Error('Password baru harus berbeda dari password lama.');PropertiesService.getScriptProperties().setProperty('ADMIN_PASSWORD_HASH',sha256(next));CacheService.getScriptCache().remove('AUTH_'+token);return{changed:true,loggedOut:true,message:'Password berhasil diubah. Silakan login kembali.'}}
-function logoutAdmin(token){if(token)CacheService.getScriptCache().remove('AUTH_'+token);return true}
+function changeAdminPassword(token,currentPassword,newPassword){requireAuth(token);const current=String(currentPassword||''),next=String(newPassword||'');if(!current||!next)throw new Error('Password lama dan password baru wajib diisi.');if(next.length<8)throw new Error('Password baru minimal 8 karakter.');if(sha256(current)!==getAdminPasswordHash())throw new Error('Password lama salah.');if(current===next)throw new Error('Password baru harus berbeda dari password lama.');PropertiesService.getScriptProperties().setProperty('ADMIN_PASSWORD_HASH',sha256(next));PropertiesService.getScriptProperties()
+  .deleteProperty('AUTH_SESSION_' + token);
+
+CacheService.getScriptCache()
+  .remove('AUTH_' + token);return{changed:true,loggedOut:true,message:'Password berhasil diubah. Silakan login kembali.'}}
+function logoutAdmin(token){
+  if(!token) return true;
+
+  PropertiesService.getScriptProperties()
+    .deleteProperty('AUTH_SESSION_' + token);
+
+  CacheService.getScriptCache()
+    .remove('AUTH_' + token);
+
+  return true;
+}
 function doGet(e){const p=e&&e.parameter?e.parameter:{};try{if(p.action==='login')return jsonResponse({ok:true,data:loginAdmin(p.username,p.password)});if(p.action==='getInvoice')return jsonResponse({ok:true,data:getInvoiceData(p.id||'')});requireAuth(p.token);if(p.action==='getSettings')return jsonResponse({ok:true,data:settingsApiGet_(p)});if(p.action==='getMenu')return jsonResponse({ok:true,data:getMenuData()});if(p.action==='getHistory')return jsonResponse({ok:true,data:getHistoryData()});if(p.action==='getFinance')return jsonResponse({ok:true,data:getFinanceData(p.month||'')});if(p.action==='exportFinance')return jsonResponse({ok:true,data:exportFinanceData(p.month||'')});if(p.action==='getCurrencyAccounts')return jsonResponse({ok:true,data:getCurrencyAccounts()});if(p.action==='getCurrencyConversions')return jsonResponse({ok:true,data:getCurrencyConversions(p.limit||50)});return jsonResponse({ok:true,data:{service:'KUDAJITU POS API',authenticated:true}})}catch(err){return jsonResponse({ok:false,error:err.message||String(err)})}}
 function doPost(e){let b;try{b=JSON.parse((e&&e.postData&&e.postData.contents)||'{}')}catch(err){return jsonResponse({ok:false,error:'JSON tidak valid.'})}try{if(b.action==='login')return jsonResponse({ok:true,data:loginAdmin(b.username,b.password)});if(b.action==='logout')return jsonResponse({ok:true,data:logoutAdmin(b.token)});if(b.action==='changePassword')return jsonResponse({ok:true,data:changeAdminPassword(b.token,b.currentPassword,b.newPassword)});requireAuth(b.token);let d;if(b.action==='getSettings')d=settingsApiGet_(b);else if(b.action==='saveSettings')d=settingsApiSave_(b);else if(b.action==='saveCategory')d=settingsApiSaveCategory_(b);else if(b.action==='deleteCategory')d=settingsApiDeleteCategory_(b);else if(b.action==='saveTransaction')d=simpanTransaksi(b.items||[],b.statusBayar);else if(b.action==='addMenu')d=tambahMenuBaru(b.namaMenu,b.hargaMenu);else if(b.action==='deleteMenu')d=hapusMenuBerdasarkanNama(b.namaMenu);else if(b.action==='updateStatus')d=updateStatusTransaksi(b.invoiceId,b.statusBaru);else if(b.action==='saveFinance')d=saveFinanceRecord(b);else if(b.action==='deleteFinance')d=deleteFinanceRecord(b.id);else if(b.action==='saveAccount')d=saveAccount(b);else if(b.action==='saveTransfer')d=saveTransfer(b);else if(b.action==='saveBudget')d=saveBudget(b);else if(b.action==='reconcileAccount')d=reconcileAccount(b);else if(b.action==='saveCurrencyAccount')d=saveCurrencyAccount(b);else if(b.action==='saveCurrencyConversion')d=saveCurrencyConversion(b);else return jsonResponse({ok:false,error:'Action tidak dikenali.'});return jsonResponse({ok:true,data:d})}catch(err){return jsonResponse({ok:false,error:err.message||String(err)})}}
 function getMenuData(){const s=getSheet('Menu');if(!s)throw new Error('Sheet "Menu" tidak ditemukan!');const d=s.getDataRange().getValues();if(d.length<=1)return[];d.shift();return d.filter(r=>r[0]!=='')}

@@ -20,7 +20,7 @@ function loadTeamCss() {
   const l = document.createElement('link');
   l.id = 'team-css';
   l.rel = 'stylesheet';
-  l.href = 'team.css?v=20260821-1100';
+  l.href = 'team.css?v=20260821-1115';
   document.head.appendChild(l);
 }
 
